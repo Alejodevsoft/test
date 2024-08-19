@@ -12,7 +12,7 @@
         <div class="images">
             <img src="src/docusign.png" alt="">
         </div>
-        <span class="help">Hello, <?php echo $user_name?></span>
+        <span class="help">Hello, <?php echo $data['user_name']?></span>
         <span class="help" style="Color:red">* The data entered below must be from the production environment, do not enter test server data, if you do not have this data, please contact support.</span>
         <form action="" method="post">
             <div class="form-group">
