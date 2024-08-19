@@ -9,13 +9,13 @@ use App\Models\MainModel;
 class MainController{
     public function index(){
         if ($_SERVER['REQUEST_METHOD']==='GET') {
-            include 'app/Views/form_monday.php';
+            view('form_monday');
         }elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (empty($_POST['user_id']) || empty($_POST['api_key'])) {
                 $this->loadErrorMain('Data not reported');
             }
             $user_name  = $this->verifiyMondayUser($_POST);
-            include 'app/Views/form_docusign.php';
+            view('form_docusign',['user_name'=>$user_name]);
         }
     }
 
