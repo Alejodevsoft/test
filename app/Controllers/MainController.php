@@ -6,6 +6,7 @@ use App\Libs\AesClass;
 use App\Libs\Monday;
 use App\Models\MainModel;
 use DocuSign\eSign\Client\ApiClient;
+use Throwable;
 
 class MainController{
     public function index(){
@@ -34,7 +35,42 @@ class MainController{
         if (!$validate_purchase['success']) {
             $this->loadErrorMain('Not purchase');
         }
+        session_start();
+        $_SESSION['user_id_monday'] = $request['user_id'];
         return $validate_user['data']['name'];
+    }
+
+    public function saveDocusign(){
+        if ($_SERVER['REQUEST_METHOD']!=='POST') {
+            $this->loadErrorMain('Method not valid');
+        }
+        $model  = new MainModel();
+        session_start();
+        $client = $model->getClientByMondayId($_SESSION['user_id_monday']);
+        session_destroy();
+        if ($client == null) {
+            $this->loadErrorMain('Client not found');
+        }
+        $request    = $_POST;
+        if (
+            empty($request['client_id']) ||
+            empty($request['user_id']) ||
+            empty($request['private_key'])
+        ) {
+            $this->loadErrorMain('Data not reported');
+        }
+        if (empty($request['server_type'])) {
+            $client['server_docusign']  = '0';
+        }else{
+            $client['server_docusign']  = $request['server_type'];
+        }
+        $client_id_docusign = $request['client_id'];
+        $user_id_docusign   = $request['user_id'];
+        $private_key        = $request['private_key'];
+        $client['client_id_docusign']   = AesClass::encrypt($client_id_docusign);
+        $client['user_id_docusign']     = AesClass::encrypt($user_id_docusign);
+        $client['private_key']          = AesClass::encrypt($private_key);
+        echo json_encode($model->updateClient($client['id'],$client));
     }
 
     public function test(){
