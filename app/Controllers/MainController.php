@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Libs\AesClass;
 use App\Libs\Monday;
 use App\Models\MainModel;
+use DocuSign\eSign\Client\ApiClient;
 
 class MainController{
     public function index(){
@@ -62,5 +63,47 @@ class MainController{
         $_SESSION['error']  = $text_error;
         header('Location: ./');
         exit;
+    }
+    public function jwt(){
+        if (isset($_GET['id'])) {
+            $model = new MainModel();
+            $clients = $model->getClientByMondayId($_GET['id']);
+            if (!empty($clients)) {
+
+                $clientId = AesClass::decrypt($clients['client_id_docusign']);
+                $userId = AesClass::decrypt($clients['user_id_docusign']);
+                if ($clients['server_docusign'] == 0) {
+                    $oauthBasePath = 'account-d.docusign.com';
+                } else {
+                    $oauthBasePath = 'account.docusign.com';
+                }
+                
+                $expiresIn = 3600;
+
+                $apiClient = new ApiClient();
+                $apiClient->getOAuth()->setOAuthBasePath($oauthBasePath);
+                $privateKey = AesClass::decrypt($clients['private_key']);
+
+                $jwt_scope = 'signature';
+
+                try {
+                    $response = $apiClient->requestJWTUserToken(
+                        $clientId,
+                        $userId,
+                        $privateKey,
+                        $jwt_scope
+                    );
+                    include 'app/Views/jwt_correct.php';
+                } catch (Throwable $th) {
+                    if (strpos($th->getMessage(), "consent_required") !== false) {
+                        include 'app/Views/jwt.php';
+                    }
+                }
+            }else{
+                header('Location: ./');
+            }
+        }else{
+            header('Location: ./');
+        }
     }
 }
