@@ -1,6 +1,13 @@
-RewriteEngine On
+<IfModule mod_rewrite.c>
+    RewriteEngine On
 
-# Redirigir todas las solicitudes a index.php
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [QSA,L]
+    # Detecta el entorno del servidor
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Asegura que funcione tanto en la raíz como en subcarpetas
+    RewriteCond %{REQUEST_URI} ^/subcarpeta/(.*)$ [OR]
+    RewriteCond %{REQUEST_URI} ^/(.*)$
+    RewriteRule ^(.*)$ index.php/$1 [L]
+
+</IfModule>

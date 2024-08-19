@@ -43,7 +43,8 @@ spl_autoload_register(function ($class) {
     }
 });
 function getRoute() {
-    $uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+    $base_dir =  str_replace('index.php','',$_SERVER['SCRIPT_NAME']);
+    $uri = trim(parse_url(str_replace($base_dir,'',$_SERVER['REQUEST_URI']), PHP_URL_PATH), '/');
     return $uri === '' ? '/' : $uri;
 }
 
