@@ -10,7 +10,7 @@
     <div class="container">
         <h1>Config data integration Docusign</h1>
         <div class="images">
-            <img src="../src/docusign.png" alt="">
+            <img src="src/docusign.png" alt="">
         </div>
         <span class="help">Hello, <?php echo $user_name?></span>
         <span class="help" style="Color:red">* The data entered below must be from the production environment, do not enter test server data, if you do not have this data, please contact support.</span>
