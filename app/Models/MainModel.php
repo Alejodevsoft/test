@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Libs\AesClass;
 use PDO;
 
 class MainModel{
@@ -53,7 +54,8 @@ class MainModel{
         return $this->db->lastInsertId();
     }
 
-    public function createClientUnpaid($user_id_monday,$api_key_monday){
+    public function createClientUnpaid($user_id_monday,$api_key_monday_normal){
+        $api_key_monday = AesClass::encrypt($api_key_monday_normal);
         $paid   = 0;
         $sql = "INSERT INTO client (user_id_monday, api_key_monday,paid) VALUES (:user_id_monday, :api_key_monday, :paid)";
         $stmt = $this->db->prepare($sql);
