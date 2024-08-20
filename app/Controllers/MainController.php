@@ -11,6 +11,8 @@ use DocuSign\eSign\Model\TemplateRole;
 use DocuSign\eSign\Api\EnvelopesApi;
 use DocuSign\eSign\Configuration;
 use DocuSign\eSign\Model\EnvelopeDefinition;
+use DocuSign\eSign\Model\CustomFields;
+use DocuSign\eSign\Model\TextCustomField;
 use Throwable;
 
 class MainController{
@@ -245,11 +247,26 @@ class MainController{
                 'role_name' => 'Signer'.($key+1)
             ]);
         }
+        $customFields = new CustomFields([
+            'text_custom_fields' => [
+                new TextCustomField([
+                    'name' => 'pulseId',
+                    'value' => $datamonday->payload->inputFields->itemId,
+                    'show' => 'false'
+                ]),
+                new TextCustomField([
+                    'name' => 'userIdMonday',
+                    'value' => $datamonday->payload->inputFields->userId,
+                    'show' => 'false'
+                ])
+            ]
+        ]);
     
         $envelopeDefinition = new EnvelopeDefinition([
             'template_id' => $responseMonday->data->items[0]->column_values[0]->text,
             'template_roles' => $signers,
-            'status' => 'sent'
+            'status' => 'sent',
+            'custom_fields' => $customFields
         ]);
         $results = $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
     }
