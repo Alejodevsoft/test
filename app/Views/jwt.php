@@ -272,6 +272,11 @@
             setTimeout(function() {
                 location.reload();
             }, 5000);
+            <?php
+                if (!empty($data_red['open_docu'])) {?>
+                    window.open('<?php echo $data_red['url']?>', '_blank');
+                <?php }
+            ?>
         </script>
     </div>
 </body>

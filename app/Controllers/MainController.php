@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libs\AesClass;
+use App\Libs\Docusign;
 use App\Libs\Monday;
 use App\Models\MainModel;
 use DocuSign\eSign\Client\ApiClient;
@@ -70,7 +71,16 @@ class MainController{
         $client['client_id_docusign']   = AesClass::encrypt($client_id_docusign);
         $client['user_id_docusign']     = AesClass::encrypt($user_id_docusign);
         $client['private_key']          = AesClass::encrypt($private_key);
-        echo json_encode($model->updateClient($client['id'],$client));
+        $model->updateClient($client['id'],$client);
+        $docusign   = Docusign::verifyConset($client_id_docusign,$user_id_docusign,$private_key);
+        if (!$docusign['success']) {
+            if ($docusign['redirect']) {
+                session_start();
+                $_SESSION['redirect_url']   = $docusign['redirect_url'];
+                header('Location: ./jwt-verify?id='.$client['user_id_monday']);
+                exit;
+            }
+        }
     }
 
     public function test(){
@@ -129,6 +139,14 @@ class MainController{
                         $privateKey,
                         $jwt_scope
                     );
+                    session_start();
+                    if (!empty($_SESSION['redirect_url'])) {
+                        $data_red['open_docu']  = true;
+                        $data_red['url']        = $_SESSION['redirect_url'];
+                    }else{
+                        $data_red['open_docu']  = false;
+                    }
+                    session_destroy();
                     include 'app/Views/jwt_correct.php';
                 } catch (Throwable $th) {
                     if (strpos($th->getMessage(), "consent_required") !== false) {
