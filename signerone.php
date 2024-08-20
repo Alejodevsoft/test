@@ -16,7 +16,7 @@ use DocuSign\eSign\Model\SignHere;
 use DocuSign\eSign\Client\ApiException;
 use DocuSign\eSign\Model\TemplateRole;
 
-$clientId = 'ab10da02-2550-48d1-8b06-6cf52787d18f';
+$clientId = 'e64f7729-dc85-4326-96f5-52e5807d1cc4';
 $userId = 'b7f39eec-c463-4526-b500-a5aa2c44a8f7';
 $oauthBasePath = 'account-d.docusign.com';
 $privateKeyPath = 'private.key';
