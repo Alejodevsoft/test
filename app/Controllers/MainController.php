@@ -21,8 +21,8 @@ class MainController{
             if (empty($_POST['user_id']) || empty($_POST['api_key'])) {
                 $this->loadErrorMain('Data not reported');
             }
-            $user_name  = $this->verifiyMondayUser($_POST);
-            view('form_docusign',['user_name'=>$user_name]);
+            $user_data  = $this->verifiyMondayUser($_POST);
+            view('form_docusign',$user_data);
         }
     }
 
@@ -41,26 +41,29 @@ class MainController{
             $this->loadErrorMain('Not purchase');
         }
         $_SESSION['user_id_monday'] = $request['user_id'];
-        return $validate_user['data']['name'];
+        return [
+            'user_name' => $validate_user['data']['name'],
+            'monday_id' => $request['user_id']
+        ];
     }
 
     public function saveDocusign(){
         if ($_SERVER['REQUEST_METHOD']!=='POST') {
             $this->loadErrorMain('Method not valid');
         }
-        $model  = new MainModel();
-        $client = $model->getClientByMondayId($_SESSION['user_id_monday']);
-        session_destroy();
-        if ($client == null) {
-            $this->loadErrorMain('Client not found');
-        }
         $request    = $_POST;
         if (
+            empty($request['monday_id']) ||
             empty($request['client_id']) ||
             empty($request['user_id']) ||
             empty($request['private_key'])
         ) {
             $this->loadErrorMain('Data not reported');
+        }
+        $model  = new MainModel();
+        $client = $model->getClientByMondayId($request['monday_id']);
+        if ($client == null) {
+            $this->loadErrorMain('Client not found');
         }
         if (empty($request['server_type'])) {
             $client['server_docusign']  = '0';
@@ -77,6 +80,7 @@ class MainController{
         $docusign   = Docusign::verifyConset($client_id_docusign,$user_id_docusign,$private_key);
         if (!$docusign['success']) {
             if ($docusign['redirect']) {
+                session_start();
                 $_SESSION['redirect_url']   = $docusign['redirect_url'];
                 exit;
             }

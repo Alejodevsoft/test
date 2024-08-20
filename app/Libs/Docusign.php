@@ -20,7 +20,7 @@ class Docusign{
             $data_return['response']    = $response;
         } catch (Throwable $th) {
             $data_return['success']     = false;
-            $data_return['redirect']    = true;
+            $data_return['redirect']    = false;
             if (strpos($th->getMessage(), "consent_required") !== false) {
                 $authorizationURL = 'https://account-d.docusign.com/oauth/auth?prompt=login&response_type=code&'
                 . http_build_query(
