@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libs\AesClass;
+use App\Libs\Docusign;
 use App\Libs\Monday;
 use App\Models\MainModel;
 use DocuSign\eSign\Client\ApiClient;
@@ -10,17 +11,18 @@ use DocuSign\eSign\Model\TemplateRole;
 use DocuSign\eSign\Api\EnvelopesApi;
 use DocuSign\eSign\Configuration;
 use DocuSign\eSign\Model\EnvelopeDefinition;
+use Throwable;
 
 class MainController{
     public function index(){
         if ($_SERVER['REQUEST_METHOD']==='GET') {
-            include 'app/Views/form_monday.php';
+            view('form_monday');
         }elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (empty($_POST['user_id']) || empty($_POST['api_key'])) {
                 $this->loadErrorMain('Data not reported');
             }
             $user_name  = $this->verifiyMondayUser($_POST);
-            include 'app/Views/form_docusign.php';
+            view('form_docusign',['user_name'=>$user_name]);
         }
     }
 
@@ -38,7 +40,51 @@ class MainController{
         if (!$validate_purchase['success']) {
             $this->loadErrorMain('Not purchase');
         }
+        session_start();
+        $_SESSION['user_id_monday'] = $request['user_id'];
         return $validate_user['data']['name'];
+    }
+
+    public function saveDocusign(){
+        if ($_SERVER['REQUEST_METHOD']!=='POST') {
+            $this->loadErrorMain('Method not valid');
+        }
+        $model  = new MainModel();
+        session_start();
+        $client = $model->getClientByMondayId($_SESSION['user_id_monday']);
+        session_destroy();
+        if ($client == null) {
+            $this->loadErrorMain('Client not found');
+        }
+        $request    = $_POST;
+        if (
+            empty($request['client_id']) ||
+            empty($request['user_id']) ||
+            empty($request['private_key'])
+        ) {
+            $this->loadErrorMain('Data not reported');
+        }
+        if (empty($request['server_type'])) {
+            $client['server_docusign']  = '0';
+        }else{
+            $client['server_docusign']  = $request['server_type'];
+        }
+        $client_id_docusign = $request['client_id'];
+        $user_id_docusign   = $request['user_id'];
+        $private_key        = $request['private_key'];
+        $client['client_id_docusign']   = AesClass::encrypt($client_id_docusign);
+        $client['user_id_docusign']     = AesClass::encrypt($user_id_docusign);
+        $client['private_key']          = AesClass::encrypt($private_key);
+        $model->updateClient($client['id'],$client);
+        $docusign   = Docusign::verifyConset($client_id_docusign,$user_id_docusign,$private_key);
+        if (!$docusign['success']) {
+            if ($docusign['redirect']) {
+                session_start();
+                $_SESSION['redirect_url']   = $docusign['redirect_url'];
+                header('Location: ./jwt-verify?id='.$client['user_id_monday']);
+                exit;
+            }
+        }
     }
 
     public function test(){
@@ -96,6 +142,14 @@ class MainController{
                         $privateKey,
                         $jwt_scope
                     );
+                    session_start();
+                    if (!empty($_SESSION['redirect_url'])) {
+                        $data_red['open_docu']  = true;
+                        $data_red['url']        = $_SESSION['redirect_url'];
+                    }else{
+                        $data_red['open_docu']  = false;
+                    }
+                    session_destroy();
                     include 'app/Views/jwt_correct.php';
                 } catch (Throwable $th) {
                     if (strpos($th->getMessage(), "consent_required") !== false) {

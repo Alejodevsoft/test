@@ -8,6 +8,7 @@ use PDOException;
 class Database{
     private $host;
     private $db;
+    private $port;
     private $user;
     private $pass;
     private $charset;
