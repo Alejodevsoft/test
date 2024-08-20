@@ -144,13 +144,15 @@ class MainController{
                     include 'app/Views/jwt_correct.php';
                 } catch (Throwable $th) {
                     if (strpos($th->getMessage(), "consent_required") !== false) {
-                        if (!empty($_SESSION['redirect_url'])) {
-                            $data_red['open_docu']  = true;
-                            $data_red['url']        = $_SESSION['redirect_url'];
-                        }else{
-                            $data_red['open_docu']  = false;
-                        }
-                        session_destroy();
+                        $authorizationURL = 'https://account-d.docusign.com/oauth/auth?prompt=login&response_type=code&'
+                        . http_build_query(
+                            [
+                                'scope' => "impersonation+" . 'signature',
+                                'client_id' => $clientId,
+                                'redirect_uri' => 'https://monday.com'
+                            ]
+                        );
+                        $data_red['url'] = $authorizationURL;
                         include 'app/Views/jwt.php';
                     }
                 }
