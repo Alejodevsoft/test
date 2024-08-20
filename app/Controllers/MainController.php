@@ -81,10 +81,10 @@ class MainController{
             if ($docusign['redirect']) {
                 session_start();
                 $_SESSION['redirect_url']   = $docusign['redirect_url'];
-                header('Location: ./jwt-verify?id='.$client['user_id_monday']);
                 exit;
             }
         }
+        header('Location: ./jwt-verify?id='.$client['user_id_monday']);
     }
 
     public function test(){
@@ -251,5 +251,6 @@ class MainController{
             'template_roles' => $signers,
             'status' => 'sent'
         ]);
+        $results = $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
     }
 }
