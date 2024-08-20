@@ -277,18 +277,10 @@
             }
         </style>
         <script>
-            <?php if (!empty($data_red['open_docu'])) { ?>
-                document.getElementById('doc').href="<?php echo $data_red['url']?>"
-                document.getElementById('doc').click();
-                    setTimeout(function() {
-                    location.reload();
-                }, 5000);
-            <?php } else { ?>
-                document.getElementById('doc').remove();
-                    setTimeout(function() {
-                    location.reload();
-                }, 5000);
-            <?php } ?>
+            document.getElementById('doc').href="<?php echo $data_red['url']?>"
+            setTimeout(function() {
+                location.reload();
+            }, 5000);
         </script>
     </div>
 </body>
