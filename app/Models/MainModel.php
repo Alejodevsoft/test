@@ -56,12 +56,13 @@ class MainModel{
 
     public function createClientUnpaid($user_id_monday,$api_key_monday_normal){
         $api_key_monday = AesClass::encrypt($api_key_monday_normal);
-        $paid   = 0;
-        $sql = "INSERT INTO client (user_id_monday, api_key_monday,paid) VALUES (:user_id_monday, :api_key_monday, :paid)";
+        $zero   = 0;
+        $sql = "INSERT INTO client (user_id_monday, api_key_monday,paid,docusign_verify) VALUES (:user_id_monday, :api_key_monday, :paid, :docusign_verify)";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':user_id_monday', $user_id_monday, PDO::PARAM_STR);
         $stmt->bindParam(':api_key_monday', $api_key_monday, PDO::PARAM_INT);
-        $stmt->bindParam(':paid', $paid, PDO::PARAM_INT );
+        $stmt->bindParam(':paid', $zero, PDO::PARAM_INT );
+        $stmt->bindParam(':docusign_verify', $zero, PDO::PARAM_INT );
         $stmt->execute();
         return $this->db->lastInsertId();
     }
