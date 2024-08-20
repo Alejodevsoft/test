@@ -16,7 +16,6 @@
         </div>
         <span class="help">* To continue you must know the data that appear in the following form (these are necessary for any change in the integration).</span>
         <?php
-            session_start();
             if (!empty($_SESSION['error'])) {?>
                 <span class="error help"><?= $_SESSION['error']?></span>
             <?php }

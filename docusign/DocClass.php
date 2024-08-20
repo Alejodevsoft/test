@@ -8,7 +8,6 @@ class DocClass {
         }
         echo json_encode($_POST);
         if (empty($_POST['user_id']) || empty($_POST['user_id'])) {
-            session_start();
             $_SESSION['error']  = 'Data not reported';
             header('Location: ../');
         }

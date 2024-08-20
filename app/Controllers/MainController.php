@@ -40,7 +40,6 @@ class MainController{
         if (!$validate_purchase['success']) {
             $this->loadErrorMain('Not purchase');
         }
-        session_start();
         $_SESSION['user_id_monday'] = $request['user_id'];
         return $validate_user['data']['name'];
     }
@@ -50,7 +49,6 @@ class MainController{
             $this->loadErrorMain('Method not valid');
         }
         $model  = new MainModel();
-        session_start();
         $client = $model->getClientByMondayId($_SESSION['user_id_monday']);
         session_destroy();
         if ($client == null) {
@@ -79,7 +77,6 @@ class MainController{
         $docusign   = Docusign::verifyConset($client_id_docusign,$user_id_docusign,$private_key);
         if (!$docusign['success']) {
             if ($docusign['redirect']) {
-                session_start();
                 $_SESSION['redirect_url']   = $docusign['redirect_url'];
                 exit;
             }
@@ -109,7 +106,6 @@ class MainController{
     }
 
     private function loadErrorMain($text_error){
-        session_start();
         $_SESSION['error']  = $text_error;
         header('Location: ./');
         exit;
@@ -142,7 +138,6 @@ class MainController{
                         $privateKey,
                         $jwt_scope
                     );
-                    session_start();
                     if (!empty($_SESSION['redirect_url'])) {
                         $data_red['open_docu']  = true;
                         $data_red['url']        = $_SESSION['redirect_url'];
