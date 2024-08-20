@@ -15,6 +15,7 @@
         <span class="help">Hello, <?php echo $data['user_name']?></span>
         <span class="help" style="Color:red">* The data entered below must be from the production environment, do not enter test server data, if you do not have this data, please contact support.</span>
         <form action="save-docusign" method="post">
+            <input type="hidden" value="<?php echo $data['monday_id']?>" name="monday_id">
             <div class="form-group">
                 <label for="server_type">Server Docusign</label>
                 <select name="server_type" id="server_type">
