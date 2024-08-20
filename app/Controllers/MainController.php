@@ -82,7 +82,6 @@ class MainController{
             if ($docusign['redirect']) {
                 session_start();
                 $_SESSION['redirect_url']   = $docusign['redirect_url'];
-                exit;
             }
         }
         header('Location: ./jwt-verify?id='.$client['user_id_monday']);
@@ -142,16 +141,16 @@ class MainController{
                         $privateKey,
                         $jwt_scope
                     );
-                    if (!empty($_SESSION['redirect_url'])) {
-                        $data_red['open_docu']  = true;
-                        $data_red['url']        = $_SESSION['redirect_url'];
-                    }else{
-                        $data_red['open_docu']  = false;
-                    }
-                    session_destroy();
                     include 'app/Views/jwt_correct.php';
                 } catch (Throwable $th) {
                     if (strpos($th->getMessage(), "consent_required") !== false) {
+                        if (!empty($_SESSION['redirect_url'])) {
+                            $data_red['open_docu']  = true;
+                            $data_red['url']        = $_SESSION['redirect_url'];
+                        }else{
+                            $data_red['open_docu']  = false;
+                        }
+                        session_destroy();
                         include 'app/Views/jwt.php';
                     }
                 }
