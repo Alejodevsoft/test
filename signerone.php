@@ -63,18 +63,6 @@ function sendDocumentToSign($recipientName, $recipientEmail, $accessToken, $acco
     $apiClient = new ApiClient($configuration);
     $envelopeApi = new EnvelopesApi($apiClient);
 
-    // Configurar el firmante 
-
-    // $signer = new TemplateRole([
-    //     'email' => 'dm9378323@gmail.com',
-    //     'name' => 'Jhoan Sebastian Rocha Martinez',
-    //     'role_name' => 'Signer' // Asegúrate de que coincida con el rol en la plantilla
-
-
-    // ]);
-
-    // Configurar vasrios firmantes
-
     $signers = [
         new TemplateRole([
             'email' => 'dm9378323@gmail.com',
@@ -103,8 +91,6 @@ function sendDocumentToSign($recipientName, $recipientEmail, $accessToken, $acco
 
 // Ejemplo de uso
 try {
-    $recipientName = 'Firma de documento';
-    $recipientEmail = 'dm9378323@gmail.com';
     $results = sendDocumentToSign($recipientName, $recipientEmail, $accessToken, $accountId, $basePath);
     print_r($results);
 
