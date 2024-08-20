@@ -7,5 +7,6 @@ return [
     'additional'    => 'App\Controllers\AdditionalController',
     'jwt-verify'    => 'App\Controllers\MainController::jwt',
     'save-docusign' => 'App\Controllers\MainController::saveDocusign',
-    'send-to-sign'  => 'App\Controllers\MainController::send'
+    'send-to-sign'  => 'App\Controllers\MainController::send',
+    'upload-monday' => 'App\Controllers\MainController::upload'
 ];

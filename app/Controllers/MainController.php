@@ -14,6 +14,7 @@ use DocuSign\eSign\Model\EnvelopeDefinition;
 use DocuSign\eSign\Model\CustomFields;
 use DocuSign\eSign\Model\TextCustomField;
 use Throwable;
+use CURLFile;
 
 class MainController{
     public function index(){
@@ -190,7 +191,43 @@ class MainController{
             ));
 
             $responseMonday = json_decode(curl_exec($curl));
+            $curl = curl_init();
 
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.monday.com/v2',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => array('query' => "{items(ids: [".$datamonday->payload->inputFields->itemId."]){column_values(types: file){id}}}"),
+                CURLOPT_HTTPHEADER => array(
+                  "Authorization: ".AesClass::decrypt($clients['api_key_monday'])
+                ),
+            ));
+
+            $responseMonday2 = json_decode(curl_exec($curl));
+            curl_close($curl);
+            $curl = curl_init();
+
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.monday.com/v2',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => array('query' => "{items(ids: [".$datamonday->payload->inputFields->itemId."]){column_values(types: status){id}}}"),
+                CURLOPT_HTTPHEADER => array(
+                  "Authorization: ".AesClass::decrypt($clients['api_key_monday'])
+                ),
+            ));
+
+            $responseMonday3 = json_decode(curl_exec($curl));
             curl_close($curl);
 
             $clientId = AesClass::decrypt($clients['client_id_docusign']);
@@ -255,8 +292,23 @@ class MainController{
                     'show' => 'false'
                 ]),
                 new TextCustomField([
+                    'name' => 'boardId',
+                    'value' => $datamonday->payload->inputFields->boardId,
+                    'show' => 'false'
+                ]),
+                new TextCustomField([
                     'name' => 'userIdMonday',
                     'value' => $datamonday->payload->inputFields->userId,
+                    'show' => 'false'
+                ]),
+                new TextCustomField([
+                    'name' => 'columnId',
+                    'value' => $responseMonday2->data->items[0]->column_values[0]->id,
+                    'show' => 'false'
+                ]),
+                new TextCustomField([
+                    'name' => 'columnIdStatus',
+                    'value' => $responseMonday3->data->items[0]->column_values[0]->id,
                     'show' => 'false'
                 ])
             ]
@@ -269,5 +321,103 @@ class MainController{
             'custom_fields' => $customFields
         ]);
         $results = $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
+    }
+
+    public function upload(){
+        $docusign = json_decode(file_get_contents('php://input'));
+        if ($docusign->data->envelopeSummary->status == "completed") {
+
+            $datosMonday = array_column($docusign->data->envelopeSummary->customFields->textCustomFields,'value','name');
+            
+            $model = new MainModel();
+            $clients = $model->getClientByMondayId($datosMonday['userIdMonday']);
+
+            foreach ($docusign->data->envelopeSummary->envelopeDocuments as $key =>$document) {
+                $base64File = $document->PDFBytes;
+                $decodedFile = base64_decode($base64File);
+                if ($key == 0) {
+                    $tempFilePath = 'Document-'.$document->documentIdGuid.'.pdf';
+                }else{
+                    $tempFilePath = 'Certificate-'.$document->documentIdGuid.'.pdf';
+                }
+                file_put_contents($tempFilePath, $decodedFile);
+                // Configura el formato de la marca de tiempo con milisegundos
+                $microtime = microtime(true);
+                $timestamp = date("Y-m-d H:i:s", $microtime) . sprintf(".%03d", ($microtime - floor($microtime)) * 1000);
+
+                // Define el nombre del archivo donde guardarás las marcas de tiempo
+                $filename = "timestamp.txt";
+
+                // Abre el archivo para añadir datos (lo crea si no existe)
+                $file = fopen($filename, "a");
+
+                // Escribe la marca de tiempo en el archivo, seguido de una nueva línea
+                fwrite($file, $tempFilePath.' - '.$timestamp . PHP_EOL);
+
+                // Cierra el archivo
+                fclose($file);
+
+                $curl = curl_init();
+
+                curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.monday.com/v2',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => array('query' => 'mutation ($file: File!) {add_file_to_column (item_id:'.$datosMonday['pulseId'].', column_id: "'.$datosMonday['columnId'].'", file: $file) {id }}','variables[file]'=> new CURLFile($tempFilePath)),
+                CURLOPT_HTTPHEADER => array(
+                    'Authorization: '.AesClass::decrypt($clients['api_key_monday'])
+                ),
+                ));
+
+                $response = curl_exec($curl);
+
+                curl_close($curl);
+
+                unlink($tempFilePath);
+            }
+            $curl = curl_init();
+
+            $query = '
+                mutation {
+                    change_column_value(
+                        item_id: ' . $datosMonday['pulseId'] . ',
+                        board_id: ' . $datosMonday['boardId'] . ',
+                        column_id: "' . $datosMonday['columnIdStatus'] . '",
+                        value: "{\"label\":\"Firmado\"}"
+                    ) {
+                        id
+                    }
+                }
+            ';
+
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.monday.com/v2',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => json_encode(array('query' => $query)),
+                CURLOPT_HTTPHEADER => array(
+                    'Authorization: ' . AesClass::decrypt($clients['api_key_monday']),
+                    'Content-Type: application/json'
+                ),
+            ));
+
+            $response = curl_exec($curl);
+
+            if(curl_errno($curl)) {
+                echo 'Error:' . curl_error($curl);
+            }
+
+            curl_close($curl);
+        }
     }
 }

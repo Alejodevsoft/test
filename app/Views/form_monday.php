@@ -24,11 +24,11 @@
         <form action="" method="post">
             <div class="form-group">
                 <label for="">UserId - Monday</label>
-                <input name="user_id" type="text" value="35497500">
+                <input name="user_id" type="text">
             </div>
             <div class="form-group">
                 <label for="">ApiKey - Monday</label>
-                <input name="api_key" type="password" type="text" value="eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjM3NDc5NjAwMCwiYWFpIjoxMSwidWlkIjozNTQ5NzUwMCwiaWFkIjoiMjAyNC0wNi0yMFQxNzoxNDoyNS4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MTAyMDk1OTMsInJnbiI6InVzZTEifQ.Kap9bbJUy0P7BqvYZsgXk8cywgocFYYfyY2yVZZzLao">
+                <input name="api_key" type="password" type="text">
             </div>
             <div class="submit-btn">
                 <button type="submit">Continue</button>
