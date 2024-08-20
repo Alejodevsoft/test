@@ -44,6 +44,9 @@
             <div class="submit-btn">
                 <button type="submit">Continue</button>
             </div>
+            <div class="form-group" style="margin-top:25px; color:red;">
+                ⚠️ If the next tab gives you "error 500", check the data sent previously
+            </div>
         </form>
     </div>
     <a href="../documentation/docusign" target="_blank">
