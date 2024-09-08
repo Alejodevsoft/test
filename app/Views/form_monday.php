@@ -16,10 +16,9 @@
         </div>
         <span class="help">* To continue you must know the data that appear in the following form (these are necessary for any change in the integration).</span>
         <?php
-            if (!empty($_SESSION['error'])) {?>
-                <span class="error help"><?= $_SESSION['error']?></span>
+            if (is_error_message()) {?>
+                <span class="error help"><?= error_message()?></span>
             <?php }
-            session_destroy();
         ?>
         <form action="" method="post">
             <div class="form-group">
