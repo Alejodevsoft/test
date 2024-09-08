@@ -428,4 +428,10 @@ class MainController{
             curl_close($curl);
         }
     }
+
+    public function logout(){
+        session_destroy();
+        header('Location: ./');
+        exit;
+    } 
 }
