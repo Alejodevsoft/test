@@ -19,13 +19,18 @@ use CURLFile;
 class MainController{
     public function index(){
         if ($_SERVER['REQUEST_METHOD']==='GET') {
-            view('form_monday');
+            if (is_logged()) {
+                view('form_docusign',get_user_data());
+            }else{
+                view('form_monday');                
+            }
         }elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (empty($_POST['user_id']) || empty($_POST['api_key'])) {
                 $this->loadErrorMain('Data not reported');
             }
-            $user_data  = $this->verifiyMondayUser($_POST);
-            view('form_docusign',$user_data);
+            $this->verifiyMondayUser($_POST);
+            header('Location: ./');
+            exit;
         }
     }
 
@@ -44,13 +49,17 @@ class MainController{
             $this->loadErrorMain('Not purchase');
         }
         $_SESSION['user_id_monday'] = $request['user_id'];
-        return [
+        $user_data  = [
             'user_name' => $validate_user['data']['name'],
             'monday_id' => $request['user_id']
         ];
+        set_login(true,$user_data);
     }
 
     public function saveDocusign(){
+        if (!is_logged()) {
+            $this->loadErrorMain('Not logged');
+        }
         if ($_SERVER['REQUEST_METHOD']!=='POST') {
             $this->loadErrorMain('Method not valid');
         }
@@ -83,7 +92,6 @@ class MainController{
         $docusign   = Docusign::verifyConset($client_id_docusign,$user_id_docusign,$private_key);
         if (!$docusign['success']) {
             if ($docusign['redirect']) {
-                session_start();
                 $_SESSION['redirect_url']   = $docusign['redirect_url'];
             }
         }
@@ -112,7 +120,7 @@ class MainController{
     }
 
     private function loadErrorMain($text_error){
-        $_SESSION['error']  = $text_error;
+        set_error($text_error);
         header('Location: ./');
         exit;
     }
@@ -420,4 +428,10 @@ class MainController{
             curl_close($curl);
         }
     }
+
+    public function logout(){
+        session_destroy();
+        header('Location: ./');
+        exit;
+    } 
 }
