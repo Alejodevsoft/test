@@ -35,14 +35,26 @@ class MainController{
     }
 
     private function verifiyMondayUser($request){
-        $validate_user      = Monday::validateUser($request['user_id'],$request['api_key']);
+        $validate_user  = Monday::validateUser($request['user_id'],$request['api_key']);
         if (!$validate_user['success']) {
             $this->loadErrorMain($validate_user['error']);
         }
         $model  = new MainModel();
-        $client = $model->getClientByMondayId($request['user_id']);
+        $client = $model->getConsoleByMondayKey($request['api_key']);
         if ($client == null) {
-            $model->createClientUnpaid($request['user_id'],$request['api_key']);
+            $resutl_insert  = $model->createConsoleUnpaid($request['api_key']);
+            if ($resutl_insert != null) {
+                $users_monday = Monday::getUsers($request['api_key']);
+                if ($users_monday['success']) {
+                    $admin_users = array_filter($users_monday['data'], function ($user) {
+                        return $user->is_admin === true;
+                    });
+                    $admin_users = array_values($admin_users);
+                    if (sizeof($admin_users) > 0) {
+                        $model->createMultipleUsers($resutl_insert,$admin_users);
+                    }
+                }
+            }
         }
         $validate_purchase  = Monday::validatePurchase();
         if (!$validate_purchase['success']) {
@@ -65,7 +77,6 @@ class MainController{
         }
         $request    = $_POST;
         if (
-            empty($request['monday_id']) ||
             empty($request['client_id']) ||
             empty($request['user_id']) ||
             empty($request['private_key'])
@@ -73,9 +84,9 @@ class MainController{
             $this->loadErrorMain('Data not reported');
         }
         $model  = new MainModel();
-        $client = $model->getClientByMondayId($request['monday_id']);
-        if ($client == null) {
-            $this->loadErrorMain('Client not found');
+        $user   = $model->getUserByMondayId(get_user_data()['monday_id']);
+        if ($user == null) {
+            $this->loadErrorMain('User not found');
         }
         if (empty($request['server_type'])) {
             $client['server_docusign']  = '0';
@@ -88,35 +99,14 @@ class MainController{
         $client['client_id_docusign']   = AesClass::encrypt($client_id_docusign);
         $client['user_id_docusign']     = AesClass::encrypt($user_id_docusign);
         $client['private_key']          = AesClass::encrypt($private_key);
-        $model->updateClient($client['id'],$client);
+        $model->updateConsole($client['console_id'],$client);
         $docusign   = Docusign::verifyConset($client_id_docusign,$user_id_docusign,$private_key);
         if (!$docusign['success']) {
             if ($docusign['redirect']) {
                 $_SESSION['redirect_url']   = $docusign['redirect_url'];
             }
         }
-        header('Location: ./jwt-verify?id='.$client['user_id_monday']);
-    }
-
-    public function test(){
-        $aes_class  = new Monday();
-        $aes_class->validateUser("35497500","eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjM3NDc5NjAwMCwiYWFpIjoxMSwidWlkIjozNTQ5NzUwMCwiaWFkIjoiMjAyNC0wNi0yMFQxNzoxNDoyNS4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MTAyMDk1OTMsInJnbiI6InVzZTEifQ.Kap9bbJUy0P7BqvYZsgXk8cywgocFYYfyY2yVZZzLao");
-    }
-
-    public function test2(){
-        $model = new MainModel();
-        $clients = $model->getAllClients();
-
-        foreach ($clients as $client) {
-            echo "ID: " . $client['id'] . " - User ID Monday: " . $client['user_id_monday'] . " - API Key Monday: " . $client['api_key_monday'] . "<br>";
-        }
-
-        // Datos del cliente
-        $user_id_monday = '35497500';
-        $api_key_monday = 'sjkhfdsjfbsjdlkgbfsldkfns';
-
-        // $newClientId = $model->createClient($user_id_monday, $api_key_monday);
-        // echo "<br>Nuevo cliente creado con ID: " . $newClientId;
+        header('Location: ./jwt-verify?id='.$client['console_id']);
     }
 
     private function loadErrorMain($text_error){
@@ -127,7 +117,7 @@ class MainController{
     public function jwt(){
         if (isset($_GET['id'])) {
             $model = new MainModel();
-            $clients = $model->getClientByMondayId($_GET['id']);
+            $clients = $model->getConsoleById($_GET['id']);
             if (!empty($clients)) {
 
                 $clientId = AesClass::decrypt($clients['client_id_docusign']);
@@ -152,6 +142,7 @@ class MainController{
                         $privateKey,
                         $jwt_scope
                     );
+                    $model->verifyConsole($_GET['id']);
                     include 'app/Views/jwt_correct.php';
                 } catch (Throwable $th) {
                     if (strpos($th->getMessage(), "consent_required") !== false) {
@@ -174,11 +165,12 @@ class MainController{
             header('Location: ./');
         }
     }
+
     public function send(){
         $datamonday = json_decode(file_get_contents('php://input'));
 
         $model = new MainModel();
-        $clients = $model->getClientByMondayId($datamonday->payload->inputFields->userId);
+        $clients = $model->getConsoleByMondayId($datamonday->payload->inputFields->userId);
 
         if (!empty($clients)) {
             $curl = curl_init();
@@ -338,7 +330,7 @@ class MainController{
             $datosMonday = array_column($docusign->data->envelopeSummary->customFields->textCustomFields,'value','name');
             
             $model = new MainModel();
-            $clients = $model->getClientByMondayId($datosMonday['userIdMonday']);
+            $clients = $model->getConsoleByMondayId($datosMonday['userIdMonday']);
 
             foreach ($docusign->data->envelopeSummary->envelopeDocuments as $key =>$document) {
                 $base64File = $document->PDFBytes;
