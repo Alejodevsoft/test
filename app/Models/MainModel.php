@@ -82,21 +82,17 @@ class MainModel{
 
     public function updateConsole($id, $data){
         $sql = "UPDATE console SET 
-                api_key_monday = :api_key_monday, 
-                server_docusign = :server_docusign, 
-                client_id_docusign = :client_id_docusign, 
-                user_id_docusign = :user_id_docusign, 
-                private_key = :private_key, 
-                paid = :paid, 
+                server_docusign = :server_docusign,
+                client_id_docusign = :client_id_docusign,
+                user_id_docusign = :user_id_docusign,
+                private_key = :private_key
                 WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->bindParam(':api_key_monday', $data['api_key_monday'], PDO::PARAM_STR);
         $stmt->bindParam(':server_docusign', $data['server_docusign'], PDO::PARAM_INT);
         $stmt->bindParam(':client_id_docusign', $data['client_id_docusign'], PDO::PARAM_STR);
         $stmt->bindParam(':user_id_docusign', $data['user_id_docusign'], PDO::PARAM_STR);
         $stmt->bindParam(':private_key', $data['private_key'], PDO::PARAM_STR);
-        $stmt->bindParam(':paid', $data['paid'], PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->rowCount();
     }
