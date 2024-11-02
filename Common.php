@@ -29,4 +29,15 @@ function is_logged(){
 function get_user_data(){
     return $_SESSION['user_data'];
 }
+
+function redirect($route = null){
+    if (empty($route)) {
+        $route  = './';
+    }else{
+        $route  = './'.$route;
+    }
+    ob_end_clean();
+    header('Location: '.$route);
+    exit;
+}
 ?>
