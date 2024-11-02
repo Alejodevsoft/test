@@ -77,7 +77,6 @@ class MainController{
         }
         $request    = $_POST;
         if (
-            empty($request['monday_id']) ||
             empty($request['client_id']) ||
             empty($request['user_id']) ||
             empty($request['private_key'])
@@ -85,7 +84,7 @@ class MainController{
             $this->loadErrorMain('Data not reported');
         }
         $model  = new MainModel();
-        $client = $model->getConsoleByMondayKey($request['api_key']);
+        $client = $model->getUserByMondayId(get_user_data()['monday_id']);
         if ($client == null) {
             $this->loadErrorMain('Client not found');
         }
@@ -100,14 +99,14 @@ class MainController{
         $client['client_id_docusign']   = AesClass::encrypt($client_id_docusign);
         $client['user_id_docusign']     = AesClass::encrypt($user_id_docusign);
         $client['private_key']          = AesClass::encrypt($private_key);
-        $model->updateConsole($client['id'],$client);
+        $model->updateConsole($client['console_id'],$client);
         $docusign   = Docusign::verifyConset($client_id_docusign,$user_id_docusign,$private_key);
         if (!$docusign['success']) {
             if ($docusign['redirect']) {
                 $_SESSION['redirect_url']   = $docusign['redirect_url'];
             }
         }
-        header('Location: ./jwt-verify?id='.$client['user_id_monday']);
+        header('Location: ./jwt-verify?id='.$client['console_id']);
     }
 
     public function test(){
@@ -139,7 +138,7 @@ class MainController{
     public function jwt(){
         if (isset($_GET['id'])) {
             $model = new MainModel();
-            $clients = $model->getConsoleByMondayKey($_GET['id']);
+            $clients = $model->getConsoleById($_GET['id']);
             if (!empty($clients)) {
 
                 $clientId = AesClass::decrypt($clients['client_id_docusign']);
@@ -164,6 +163,7 @@ class MainController{
                         $privateKey,
                         $jwt_scope
                     );
+                    $model->verifyConsole($_GET['id']);
                     include 'app/Views/jwt_correct.php';
                 } catch (Throwable $th) {
                     if (strpos($th->getMessage(), "consent_required") !== false) {
@@ -186,6 +186,7 @@ class MainController{
             header('Location: ./');
         }
     }
+
     public function send(){
         $datamonday = json_decode(file_get_contents('php://input'));
 
