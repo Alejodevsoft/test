@@ -14,13 +14,6 @@ class MainModel{
         $this->db = $database->connect();
     }
 
-    public function getAllClients(){
-        $sql = "SELECT * FROM console";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll();
-    }
-
     public function getConsoleById($id){
         $sql = "SELECT * FROM console WHERE id = :id";
         $stmt = $this->db->prepare($sql);
@@ -46,6 +39,22 @@ class MainModel{
         return $return;
     }
 
+    public function getConsoleByMondayId($monday_id){
+        $table  = 'user'.substr($monday_id,0,1);
+        $sql = "SELECT c.id,c.api_key_monday,c.client_id_docusign,c.user_id_docusign,c.server_docusign FROM $table
+                JOIN console AS c ON $table.console_id = c.id
+                WHERE monday_id = :monday_id
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':monday_id', $monday_id, PDO::PARAM_STR);
+        $stmt->execute();
+        $return = $stmt->fetch();
+        if ($return===false) {
+            return null;
+        }
+        return $return;
+    }
+
     public function getUserByMondayId($monday_id){
         $table  = 'user'.substr($monday_id,0,1);
         $sql = "SELECT * FROM $table WHERE monday_id = :monday_id";
@@ -57,14 +66,6 @@ class MainModel{
             return null;
         }
         return $return;
-    }
-
-    public function createConsole($api_key_monday){
-        $sql = "INSERT INTO console (api_key_monday) VALUES (:api_key_monday)";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':api_key_monday', $api_key_monday, PDO::PARAM_STR);
-        $stmt->execute();
-        return $this->db->lastInsertId();
     }
 
     public function createConsoleUnpaid($api_key_monday_normal){
@@ -87,7 +88,6 @@ class MainModel{
                 user_id_docusign = :user_id_docusign, 
                 private_key = :private_key, 
                 paid = :paid, 
-                docusign_verify = :docusign_verify 
                 WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
@@ -97,7 +97,6 @@ class MainModel{
         $stmt->bindParam(':user_id_docusign', $data['user_id_docusign'], PDO::PARAM_STR);
         $stmt->bindParam(':private_key', $data['private_key'], PDO::PARAM_STR);
         $stmt->bindParam(':paid', $data['paid'], PDO::PARAM_INT);
-        $stmt->bindParam(':docusign_verify', $data['docusign_verify'], PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->rowCount();
     }

@@ -84,9 +84,9 @@ class MainController{
             $this->loadErrorMain('Data not reported');
         }
         $model  = new MainModel();
-        $client = $model->getUserByMondayId(get_user_data()['monday_id']);
-        if ($client == null) {
-            $this->loadErrorMain('Client not found');
+        $user   = $model->getUserByMondayId(get_user_data()['monday_id']);
+        if ($user == null) {
+            $this->loadErrorMain('User not found');
         }
         if (empty($request['server_type'])) {
             $client['server_docusign']  = '0';
@@ -107,27 +107,6 @@ class MainController{
             }
         }
         header('Location: ./jwt-verify?id='.$client['console_id']);
-    }
-
-    public function test(){
-        $aes_class  = new Monday();
-        $aes_class->validateUser("35497500","eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjM3NDc5NjAwMCwiYWFpIjoxMSwidWlkIjozNTQ5NzUwMCwiaWFkIjoiMjAyNC0wNi0yMFQxNzoxNDoyNS4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MTAyMDk1OTMsInJnbiI6InVzZTEifQ.Kap9bbJUy0P7BqvYZsgXk8cywgocFYYfyY2yVZZzLao");
-    }
-
-    public function test2(){
-        $model = new MainModel();
-        $clients = $model->getAllClients();
-
-        foreach ($clients as $client) {
-            echo "ID: " . $client['id'] . " - User ID Monday: " . $client['user_id_monday'] . " - API Key Monday: " . $client['api_key_monday'] . "<br>";
-        }
-
-        // Datos del cliente
-        $user_id_monday = '35497500';
-        $api_key_monday = 'sjkhfdsjfbsjdlkgbfsldkfns';
-
-        // $newClientId = $model->createClient($user_id_monday, $api_key_monday);
-        // echo "<br>Nuevo cliente creado con ID: " . $newClientId;
     }
 
     private function loadErrorMain($text_error){
@@ -191,7 +170,7 @@ class MainController{
         $datamonday = json_decode(file_get_contents('php://input'));
 
         $model = new MainModel();
-        $clients = $model->getConsoleByMondayKey($datamonday->payload->inputFields->userId);
+        $clients = $model->getConsoleByMondayId($datamonday->payload->inputFields->userId);
 
         if (!empty($clients)) {
             $curl = curl_init();
@@ -351,7 +330,7 @@ class MainController{
             $datosMonday = array_column($docusign->data->envelopeSummary->customFields->textCustomFields,'value','name');
             
             $model = new MainModel();
-            $clients = $model->getConsoleByMondayKey($datosMonday['userIdMonday']);
+            $clients = $model->getConsoleByMondayId($datosMonday['userIdMonday']);
 
             foreach ($docusign->data->envelopeSummary->envelopeDocuments as $key =>$document) {
                 $base64File = $document->PDFBytes;
