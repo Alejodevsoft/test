@@ -29,8 +29,7 @@ class MainController{
                 $this->loadErrorMain('Data not reported');
             }
             $this->verifiyMondayUser($_POST);
-            header('Location: ./');
-            exit;
+            redirect();
         }
     }
 
@@ -99,20 +98,19 @@ class MainController{
         $client['client_id_docusign']   = AesClass::encrypt($client_id_docusign);
         $client['user_id_docusign']     = AesClass::encrypt($user_id_docusign);
         $client['private_key']          = AesClass::encrypt($private_key);
-        $model->updateConsole($client['console_id'],$client);
+        $model->updateConsole($user['console_id'],$client);
         $docusign   = Docusign::verifyConset($client_id_docusign,$user_id_docusign,$private_key);
         if (!$docusign['success']) {
             if ($docusign['redirect']) {
                 $_SESSION['redirect_url']   = $docusign['redirect_url'];
             }
         }
-        header('Location: ./jwt-verify?id='.$client['console_id']);
+        redirect('jwt-verify?id='.$user['console_id']);
     }
 
     private function loadErrorMain($text_error){
         set_error($text_error);
-        header('Location: ./');
-        exit;
+        redirect();
     }
     public function jwt(){
         if (isset($_GET['id'])) {
@@ -159,10 +157,10 @@ class MainController{
                     }
                 }
             }else{
-                header('Location: ./');
+                redirect();
             }
         }else{
-            header('Location: ./');
+            redirect();
         }
     }
 
@@ -423,7 +421,6 @@ class MainController{
 
     public function logout(){
         session_destroy();
-        header('Location: ./');
-        exit;
+        redirect();
     } 
 }
