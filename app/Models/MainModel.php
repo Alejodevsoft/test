@@ -21,7 +21,7 @@ class MainModel{
         return $stmt->fetchAll();
     }
 
-    public function getClientById($id){
+    public function getConsoleById($id){
         $sql = "SELECT * FROM console WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
@@ -81,7 +81,6 @@ class MainModel{
 
     public function updateConsole($id, $data){
         $sql = "UPDATE console SET 
-                user_id_monday = :user_id_monday, 
                 api_key_monday = :api_key_monday, 
                 server_docusign = :server_docusign, 
                 client_id_docusign = :client_id_docusign, 
@@ -92,7 +91,6 @@ class MainModel{
                 WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->bindParam(':user_id_monday', $data['user_id_monday'], PDO::PARAM_STR);
         $stmt->bindParam(':api_key_monday', $data['api_key_monday'], PDO::PARAM_STR);
         $stmt->bindParam(':server_docusign', $data['server_docusign'], PDO::PARAM_INT);
         $stmt->bindParam(':client_id_docusign', $data['client_id_docusign'], PDO::PARAM_STR);
@@ -100,6 +98,16 @@ class MainModel{
         $stmt->bindParam(':private_key', $data['private_key'], PDO::PARAM_STR);
         $stmt->bindParam(':paid', $data['paid'], PDO::PARAM_INT);
         $stmt->bindParam(':docusign_verify', $data['docusign_verify'], PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
+
+    public function verifyConsole($id){
+        $sql = "UPDATE console SET
+                docusign_verify = 1 
+                WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->rowCount();
     }
