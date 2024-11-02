@@ -76,4 +76,3 @@ class Monday{
     }
 }
 ?>
-query{users{name email id is_admin}}
