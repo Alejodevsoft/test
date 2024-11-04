@@ -6,11 +6,11 @@
     <title>Docusign Integracion</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="login-body">
     <div class="container">
         <h1>Config data integration Docusign</h1>
         <div class="images">
-            <img src="src/docusign.png" alt="">
+            <img src="src/mds_white.png" alt="">
         </div>
         <span class="help">Hello, <?php echo $data['user_name']?></span>
         <span class="help" style="Color:red">* The data entered below must be from the production environment, do not enter test server data, if you do not have this data, please contact support.</span>
@@ -41,7 +41,7 @@
                 <label for="private_key">PrivateKey</label>
                 <textarea name="private_key" id="private_key" required></textarea>
             </div>
-            <p class="form-group">⚠️ You need to have "https://monday.com" set in your ReductURL <a target="_blank" style="color:#007bff;" href="documentation/docusign/#redirecturl">SEE THE DOCUMENTATION</a></p>
+            <p class="form-group">⚠️ You need to have "https://monday.com" set in your RedirectURL</p>
             <div class="submit-btn">
                 <button type="submit">Continue</button>
             </div>
@@ -50,11 +50,6 @@
             </div>
         </form>
     </div>
-    <a href="../documentation/docusign" target="_blank">
-        <div class="help-btn">
-            ?
-        </div>
-    </a>
     <script>
         const textarea = document.getElementById('private_key');
         textarea.addEventListener('input', function() {
