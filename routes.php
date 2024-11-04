@@ -9,5 +9,6 @@ return [
     'save-docusign' => 'App\Controllers\MainController::saveDocusign',
     'send-to-sign'  => 'App\Controllers\MainController::send',
     'upload-monday' => 'App\Controllers\MainController::upload',
-    'logout'        => 'App\Controllers\MainController::logout'
+    'logout'        => 'App\Controllers\MainController::logout',
+    'admin'         => 'App\Controllers\AdminController::admin'
 ];
