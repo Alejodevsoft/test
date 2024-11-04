@@ -48,6 +48,7 @@ spl_autoload_register(function ($class) {
         echo "No se encontró el archivo: " . $file . "<br>";
     }
 });
+//Obtiene la ruta del navegador, limpiadno el index y la y el dominio
 function getRoute() {
     $base_dir =  str_replace('index.php','',$_SERVER['SCRIPT_NAME']);
     $uri = trim(parse_url(str_replace($base_dir,'',$_SERVER['REQUEST_URI']), PHP_URL_PATH), '/');
