@@ -6,40 +6,26 @@
     <title>Document</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="login-body">
     <div class="container">
         <h1>Welcome to MD (Integration Monday & Docusign)</h1>
         <div class="images">
-            <img src="src/monday.svg" alt="monday">
-            <span>+</span>
-            <img src="src/docusign.png" alt="">
+            <img src="src/mds_white.png" alt="">
         </div>
         <span class="help">* To continue you must know the data that appear in the following form (these are necessary for any change in the integration).</span>
-        <?php
-            if (is_error_message()) {?>
-                <span class="error help"><?= error_message()?></span>
-            <?php }
-        ?>
         <form action="" method="post">
             <div class="form-group">
-                <label for="">UserId - Monday</label>
-                <input name="user_id" type="text">
+                <label for="">UserId (Admin) - Monday</label>
+                <input name="user_id" type="text" placeholder="UserId (Admin) - Monday">
             </div>
             <div class="form-group">
                 <label for="">ApiKey - Monday</label>
-                <input name="api_key" type="password" type="text">
+                <input name="api_key" type="password" type="text" placeholder="ApiKey - Monday">
             </div>
             <div class="submit-btn">
                 <button type="submit">Continue</button>
             </div>
         </form>
-    </div>
-    <div class="container-help">
-    <a href="documentation/monday" target="_blank">
-        <div class="help-btn">
-            ?
-        </div>
-    </a>
     </div>
 </body>
 </html>
