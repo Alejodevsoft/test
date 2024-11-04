@@ -1,4 +1,11 @@
 <?php
+
+function template_init($view,$data=[]){
+    include 'app/Views/head.php';
+    include 'app/Views/'.$view.'.php';
+    include 'app/Views/foot.php';
+}
+
 function view($view,$data=[]){
     include 'app/Views/'.$view.'.php';
 }

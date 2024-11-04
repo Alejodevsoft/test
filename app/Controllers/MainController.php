@@ -20,9 +20,9 @@ class MainController{
     public function index(){
         if ($_SERVER['REQUEST_METHOD']==='GET') {
             if (is_logged()) {
-                view('form_docusign',get_user_data());
+                template_init('form_docusign',get_user_data());
             }else{
-                view('form_monday');                
+                template_init('form_monday');                
             }
         }elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (empty($_POST['user_id']) || empty($_POST['api_key'])) {
