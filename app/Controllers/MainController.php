@@ -178,68 +178,11 @@ class MainController{
         $clients = $model->getConsoleByMondayId($datamonday->payload->inputFields->userId);
 
         if (!empty($clients)) {
-            $curl = curl_init();
+            $responseMonday = json_decode(Monday::genericCurl(AesClass::decrypt($clients['api_key_monday']),'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: text){text}subitems{name,column_values(types: email){text}}}}'));
+            
+            $responseMonday2 = json_decode(Monday::genericCurl(AesClass::decrypt($clients['api_key_monday']),'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: file){id}}}'));
 
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => 'https://api.monday.com/v2',
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => '',
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => '{
-                    "query":"{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: text){text}subitems{name,column_values(types: email){text}}}}"
-                }',
-                CURLOPT_HTTPHEADER => array(
-                  "Authorization: ".AesClass::decrypt($clients['api_key_monday'])
-                ),
-            ));
-
-            $responseMonday = json_decode(curl_exec($curl));
-            $curl = curl_init();
-
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => 'https://api.monday.com/v2',
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => '',
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => '{
-                    "query":"{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: file){id}}}"
-                }',
-                CURLOPT_HTTPHEADER => array(
-                  "Authorization: ".AesClass::decrypt($clients['api_key_monday'])
-                ),
-            ));
-
-            $responseMonday2 = json_decode(curl_exec($curl));
-            curl_close($curl);
-            $curl = curl_init();
-
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => 'https://api.monday.com/v2',
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => '',
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => '{
-                    "query":"{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: status){id}}}"
-                }',
-                CURLOPT_HTTPHEADER => array(
-                  "Authorization: ".AesClass::decrypt($clients['api_key_monday'])
-                ),
-            ));
-
-            $responseMonday3 = json_decode(curl_exec($curl));
-            curl_close($curl);
+            $responseMonday3 = json_decode(Monday::genericCurl(AesClass::decrypt($clients['api_key_monday']),'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: status){id}}}'));
 
             $clientId = AesClass::decrypt($clients['client_id_docusign']);
             $userId = AesClass::decrypt($clients['user_id_docusign']);
