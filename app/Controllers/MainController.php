@@ -189,7 +189,9 @@ class MainController{
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => array('query' => "{items(ids: [".$datamonday->payload->inputFields->itemId."]){column_values(types: text){text}subitems{name,column_values(types: email){text}}}}"),
+                CURLOPT_POSTFIELDS => '{
+                    "query":"{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: text){text}subitems{name,column_values(types: email){text}}}}"
+                }',
                 CURLOPT_HTTPHEADER => array(
                   "Authorization: ".AesClass::decrypt($clients['api_key_monday'])
                 ),
@@ -207,7 +209,9 @@ class MainController{
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => array('query' => "{items(ids: [".$datamonday->payload->inputFields->itemId."]){column_values(types: file){id}}}"),
+                CURLOPT_POSTFIELDS => '{
+                    "query":"{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: file){id}}}"
+                }',
                 CURLOPT_HTTPHEADER => array(
                   "Authorization: ".AesClass::decrypt($clients['api_key_monday'])
                 ),
@@ -226,7 +230,9 @@ class MainController{
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => array('query' => "{items(ids: [".$datamonday->payload->inputFields->itemId."]){column_values(types: status){id}}}"),
+                CURLOPT_POSTFIELDS => '{
+                    "query":"{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: status){id}}}"
+                }',
                 CURLOPT_HTTPHEADER => array(
                   "Authorization: ".AesClass::decrypt($clients['api_key_monday'])
                 ),
