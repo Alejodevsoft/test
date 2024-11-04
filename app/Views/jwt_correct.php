@@ -6,7 +6,7 @@
     <title>Document</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="login-body">
     <div class="container">
         <h1>Verifying the connection with docusign</h1>
         
