@@ -49,6 +49,10 @@ class Monday{
         return $return;
     }
 
+    public static function genericCurl($apiKey,$query){
+        return self::curlMonday($apiKey,$query);
+    }
+
     private static function curlMonday($apiKey,$query){
         $curl = curl_init();
 
