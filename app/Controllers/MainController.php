@@ -148,7 +148,7 @@ class MainController{
                         $jwt_scope
                     );
                     $this->main_model->verifyConsole($_GET['id']);
-                    include 'app/Views/jwt_correct.php';
+                    view('jwt_correct');
                 } catch (Throwable $th) {
                     if (strpos($th->getMessage(), "consent_required") !== false) {
                         $authorizationURL = 'https://account-d.docusign.com/oauth/auth?prompt=login&response_type=code&'
@@ -159,8 +159,7 @@ class MainController{
                                 'redirect_uri' => 'https://monday.com'
                             ]
                         );
-                        $data_red['url'] = $authorizationURL;
-                        include 'app/Views/jwt.php';
+                        view('jwt',['url'=>$authorizationURL]);
                     }
                 }
             }else{

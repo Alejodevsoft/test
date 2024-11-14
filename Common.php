@@ -1,12 +1,22 @@
 <?php
 
 function template_init($view,$data=[]){
+    if (sizeof($data) > 0) {
+        foreach ($data as $var_name => $value) {
+            $$var_name  = $value;
+        }
+    }
     include 'app/Views/head.php';
     include 'app/Views/'.$view.'.php';
     include 'app/Views/foot.php';
 }
 
 function view($view,$data=[]){
+    if (sizeof($data) > 0) {
+        foreach ($data as $var_name => $value) {
+            $$var_name  = $value;
+        }
+    }
     include 'app/Views/'.$view.'.php';
 }
 
