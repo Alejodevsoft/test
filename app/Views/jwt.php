@@ -277,7 +277,7 @@
             }
         </style>
         <script>
-            document.getElementById('doc').href="<?php echo $data_red['url']?>"
+            document.getElementById('doc').href="<?php echo $url?>"
             setTimeout(function() {
                 location.reload();
             }, 5000);
