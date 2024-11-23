@@ -11,9 +11,9 @@ function template_init($view,$data=[]){
             $$var_name  = $value;
         }
     }
-    include 'app/Views/head.php';
-    include 'app/Views/'.$view.'.php';
-    include 'app/Views/foot.php';
+    include 'app/Views/admin/head.php';
+    include 'app/Views/admin/'.$view.'.php';
+    include 'app/Views/admin/foot.php';
 }
 
 function view($view,$data=[]){
@@ -39,6 +39,34 @@ function error_message(){
     return $error;
 }
 
+function set_reverify($rev){
+    $_SESSION['reverify']  = $rev;
+}
+
+function is_reverify(){
+    return isset($_SESSION['reverify']);
+}
+
+function reverify(){
+    $reverify   = $_SESSION['reverify'];
+    unset($_SESSION['reverify']);
+    return $reverify;
+}
+
+function set_docusign_new($data=''){
+    $_SESSION['docusign_new']  = $data;
+}
+
+function is_docusign_new(){
+    return isset($_SESSION['docusign_new']);
+}
+
+function docusign_new(){
+    $docusign_new  = $_SESSION['docusign_new'];
+    unset($_SESSION['docusign_new']);
+    return $docusign_new;
+}
+
 function set_login($valid = false,$user_data=[]){
     $_SESSION['logged']     = $valid;
     $_SESSION['user_data']  = $user_data;
@@ -54,12 +82,16 @@ function get_user_data(){
 
 function redirect($route = null){
     if (empty($route)) {
-        $route  = './';
+        $route  = base_url();
     }else{
-        $route  = './'.$route;
+        $route  = base_url().$route;
     }
     ob_end_clean();
     header('Location: '.$route);
     exit;
+}
+
+function base_url(){
+    return (($_SERVER['REQUEST_SCHEME']=='https')?'https://':'http://').$_SERVER['HTTP_HOST'].str_replace('index.php','',$_SERVER['SCRIPT_NAME']);
 }
 ?>
