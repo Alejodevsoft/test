@@ -29,6 +29,10 @@ function set_error($error_message=''){
     $_SESSION['error']  = $error_message;
 }
 
+function set_open_tab($url=''){
+    $_SESSION['open_tab']  = $url;
+}
+
 function is_error_message(){
     return isset($_SESSION['error']);
 }
