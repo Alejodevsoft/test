@@ -106,6 +106,28 @@ document.getElementById('boardSelect').addEventListener("change", (event) => {
     });
 });
 
-function assignTemplate(idContratc,idTemplate) {
+function assignTemplate(contratcId,templateId) {
     // alert("se esta creando el contrato "+idContratc+" con la identificacion de template "+idTemplate);
+    const formData = new FormData();
+    formData.append('board_id', select.getSelected());
+    formData.append('contract_id', contratcId);
+    formData.append('template_id', templateId);
+
+
+    fetch(getUrl()+"admin/set-template", {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data);
+    })
+    .catch(error => {
+        
+    });
 }

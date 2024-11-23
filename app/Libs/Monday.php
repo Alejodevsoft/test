@@ -109,6 +109,19 @@ class Monday{
         return $return;
     }
 
+    public static function setTemplate($apiKey, $boardId, $contractId, $templateId){
+        // Llamar a curlMonday
+        $response = self::curlMondayJsonQuery($apiKey, "mutation {change_multiple_column_values(item_id:$contractId, board_id:$boardId, column_values: \"{\\\"texto__1\\\":\\\"$templateId\\\"}\") {id}}");
+
+        $data = json_decode($response);
+        if (isset($data->errors)) {
+            $return['success'] = false;
+            $return['error'] = "Error Api Key";
+
+            return $return;
+        }
+    }
+
     public static function validatePurchase(){
         $return['success'] = true;
         return $return;
@@ -133,6 +146,34 @@ class Monday{
             CURLOPT_POSTFIELDS => '{
                 "query":"'.$query.'"
             }',
+            CURLOPT_HTTPHEADER => array(
+                "Authorization: $apiKey",
+                "Content-Type: application/json",
+            ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        return $response;
+    }
+
+    private static function curlMondayJsonQuery($apiKey,$query){
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.monday.com/v2',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => json_encode(
+                [
+                    'query' => $query
+                ]
+            ),
             CURLOPT_HTTPHEADER => array(
                 "Authorization: $apiKey",
                 "Content-Type: application/json",
