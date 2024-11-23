@@ -4,7 +4,7 @@ namespace App\Libs;
 
 class Monday{
     public static function validateUser($userId, $apiKey){
-        $response   = self::curlMonday($apiKey,"{users(ids:[$userId]){name}}");
+        $response   = self::curlMonday($apiKey,"{users(ids:[$userId]){name}account{name,slug}}");
         $data = json_decode($response);
         if (isset($data->errors)) {
             $return['success'] = false;
@@ -19,10 +19,16 @@ class Monday{
             return $return;
         }
         $return['success'] = true;
+        if (!empty($data->data->account->name)) {
+            $return['data']['company_name'] = $data->data->account->name;
+        }else{
+            $return['data']['company_name'] = $data->data->account->slug;
+        }
         $return['data']['name'] = $data->data->users[0]->name;
 
         return $return;
     }
+
     public static function getUsers($apiKey){
         $response   = self::curlMonday($apiKey,"query{users{name email id is_admin}}");
         $data = json_decode($response);
@@ -40,6 +46,65 @@ class Monday{
         }
         $return['success'] = true;
         $return['data'] = $data->data->users;
+
+        return $return;
+    }
+
+    public static function getBoards($apiKey) {
+        $allBoards = [];
+        $hasMore = true;
+        $page = 1;
+        $limit = 5000;
+    
+        while ($hasMore) {
+            $response = self::curlMonday($apiKey,"{boards(limit:$limit,page:$page){id,name,type}}");
+    
+            $data = json_decode($response);
+    
+            if (isset($data->errors)) {
+                $return['success'] = false;
+                $return['error'] = "Error Api Key";
+    
+                return $return;
+            }
+    
+            if (empty($data->data->boards)) {
+                $return['success'] = false;
+                $return['error'] = "Error not boards";
+    
+                return $return;
+            }
+    
+            $allBoards = array_merge($allBoards, $data->data->boards);
+    
+            $hasMore = count($data->data->boards) === $limit;
+            $page++;
+        }
+    
+        $return['success'] = true;
+        $return['data'] = $allBoards;
+    
+        return $return;
+    }
+
+    public static function getContracts($apiKey, $boardId) {
+        $response   = self::curlMonday($apiKey,"{boards(ids:$boardId){items_page{items{name,id,column_values(ids:\\\"texto__1\\\"){text,column{title}}}}}}");
+        $data = json_decode($response);
+        if (isset($data->errors)) {
+            $return['success'] = false;
+            $return['error'] = "Error Api Key";
+
+            return $return;
+        }
+        $data = $data->data->boards[0]->items_page->items;
+        
+        if (!empty($data[0]->column_values[0]->column) && $data[0]->column_values[0]->column->title == "ID Template") {
+            $return['success'] = true;
+            $return['data'] = $data;
+        }else {
+            $return['success'] = false;
+            $return['error'] = "This board isn't compatible with MDS";
+        }
 
         return $return;
     }

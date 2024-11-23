@@ -68,11 +68,12 @@ class MainModel{
         return $return;
     }
 
-    public function createConsoleUnpaid($api_key_monday_normal){
-        $api_key_monday = AesClass::encrypt($api_key_monday_normal);
+    public function createConsoleUnpaid($data){
+        $api_key_monday = AesClass::encrypt($data['api_key']);
         $zero   = 0;
-        $sql = "INSERT INTO console (api_key_monday,paid,docusign_verify) VALUES (:api_key_monday, :paid, :docusign_verify)";
+        $sql = "INSERT INTO console (client_name,api_key_monday,paid,docusign_verify) VALUES (:client_name,:api_key_monday, :paid, :docusign_verify)";
         $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':client_name', $data['client_name'], PDO::PARAM_STR);
         $stmt->bindParam(':api_key_monday', $api_key_monday, PDO::PARAM_STR);
         $stmt->bindParam(':paid', $zero, PDO::PARAM_INT );
         $stmt->bindParam(':docusign_verify', $zero, PDO::PARAM_INT );
@@ -100,6 +101,16 @@ class MainModel{
     public function verifyConsole($id){
         $sql = "UPDATE console SET
                 docusign_verify = 1 
+                WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
+
+    public function unVerifyConsole($id){
+        $sql = "UPDATE console SET
+                docusign_verify = 0 
                 WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
