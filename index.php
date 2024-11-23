@@ -50,8 +50,16 @@ spl_autoload_register(function ($class) {
 });
 //Obtiene la ruta del navegador, limpiadno el index y la y el dominio
 function getRoute() {
-    $base_dir =  str_replace('index.php','',$_SERVER['SCRIPT_NAME']);
-    $uri = trim(parse_url(str_replace($base_dir,'',$_SERVER['REQUEST_URI']), PHP_URL_PATH), '/');
+    $base_dir = rtrim(str_replace('index.php', '', $_SERVER['SCRIPT_NAME']), '/');
+    $request_uri = $_SERVER['REQUEST_URI'];
+    $relative_uri = parse_url($request_uri, PHP_URL_PATH);
+
+    if ($base_dir !== '') {
+        $relative_uri = preg_replace('#^' . preg_quote($base_dir, '#') . '/?#', '', $relative_uri);
+    }
+
+    $uri = trim($relative_uri, '/');
+
     return $uri === '' ? '/' : $uri;
 }
 
