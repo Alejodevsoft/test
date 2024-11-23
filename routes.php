@@ -10,5 +10,6 @@ return [
     'send-to-sign'  => 'App\Controllers\MainController::send',
     'upload-monday' => 'App\Controllers\MainController::upload',
     'logout'        => 'App\Controllers\MainController::logout',
-    'admin'         => 'App\Controllers\AdminController::admin'
+    'admin'         => 'App\Controllers\AdminController::admin',
+    'docusign'         => 'App\Controllers\AdminController::docusign'
 ];

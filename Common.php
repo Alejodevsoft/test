@@ -11,9 +11,9 @@ function template_init($view,$data=[]){
             $$var_name  = $value;
         }
     }
-    include 'app/Views/head.php';
-    include 'app/Views/'.$view.'.php';
-    include 'app/Views/foot.php';
+    include 'app/Views/admin/head.php';
+    include 'app/Views/admin/'.$view.'.php';
+    include 'app/Views/admin/foot.php';
 }
 
 function view($view,$data=[]){
@@ -61,5 +61,9 @@ function redirect($route = null){
     ob_end_clean();
     header('Location: '.$route);
     exit;
+}
+
+function base_url(){
+    return (($_SERVER['REQUEST_SCHEME']=='https')?'https://':'http://').$_SERVER['HTTP_HOST'].str_replace('index.php','',$_SERVER['SCRIPT_NAME']);
 }
 ?>

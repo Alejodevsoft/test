@@ -16,6 +16,7 @@
                 <path fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M17.7,40.9l10.9,10.9l28.7-28.7"/>
           </svg>
           <h1 class="success-message__title">Configuracion Completa</h1>
+          <button class="btn" onclick="window.location.href = 'admin/'">Ir al panel</button>
         </div>
         <style>
           .success-message {
@@ -29,6 +30,14 @@
 
           .success-message__icon {
             max-width: 75px;
+          }
+          .btn{
+            background: #a9dfd8 !important;
+            color: #171821;
+            font-weight: 700;
+          }
+          .btn:hover{
+            background: #73cabe !important;
           }
 
           .success-message__title {
