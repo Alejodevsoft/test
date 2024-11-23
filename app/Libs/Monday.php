@@ -49,6 +49,43 @@ class Monday{
         return $return;
     }
 
+    public static function getBoards($apiKey) {
+        $allBoards = [];
+        $hasMore = true;
+        $page = 1;
+        $limit = 1000000;
+    
+        while ($hasMore) {
+            $response = self::curlMonday($apiKey,"{boards(limit:$limit,page:$page){id,name,type}}");
+    
+            $data = json_decode($response);
+    
+            if (isset($data->errors)) {
+                $return['success'] = false;
+                $return['error'] = "Error Api Key";
+    
+                return $return;
+            }
+    
+            if (empty($data->data->boards)) {
+                $return['success'] = false;
+                $return['error'] = "Error not boards";
+    
+                return $return;
+            }
+    
+            $allBoards = array_merge($allBoards, $data->data->boards);
+    
+            $hasMore = count($data->data->boards) === $limit;
+            $page++;
+        }
+    
+        $return['success'] = true;
+        $return['data'] = $allBoards;
+    
+        return $return;
+    }
+
     public static function validatePurchase(){
         $return['success'] = true;
         return $return;
