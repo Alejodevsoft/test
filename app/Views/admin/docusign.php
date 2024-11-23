@@ -84,5 +84,8 @@
             
             e.target.value = input;
         });
+        <?php if (is_reverify()) {
+            
+        }?>
     </script>
 </div>

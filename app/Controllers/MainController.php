@@ -125,24 +125,31 @@ class MainController{
     }
     public function jwt(){
         if (isset($_GET['id'])) {
-            $clients = $this->main_model->getConsoleById($_GET['id']);
-            if (!empty($clients)) {
-
-                $clientId = AesClass::decrypt($clients['client_id_docusign']);
-                $userId = AesClass::decrypt($clients['user_id_docusign']);
-                if ($clients['server_docusign'] == 0) {
+            $console = $this->main_model->getConsoleById($_GET['id']);
+            if (!empty($console)) {
+                if (is_docusign_new()) {
+                    $is_doc_new = true;
+                    $new_docusign   = docusign_new();
+                    $clientId   = AesClass::decrypt($new_docusign['client_id_docusign']);
+                    $userId     = AesClass::decrypt($new_docusign['user_id_docusign']);
+                    $privateKey = AesClass::decrypt($new_docusign['private_key']);
+                }else{
+                    $is_doc_new = false;
+                    $clientId   = AesClass::decrypt($console['client_id_docusign']);
+                    $userId     = AesClass::decrypt($console['user_id_docusign']);
+                    $privateKey = AesClass::decrypt($console['private_key']);
+                }
+                if ($console['server_docusign'] == 0) {
                     $oauthBasePath = 'account-d.docusign.com';
                 } else {
                     $oauthBasePath = 'account.docusign.com';
                 }
                 
-
                 $apiClient = new ApiClient();
                 $apiClient->getOAuth()->setOAuthBasePath($oauthBasePath);
-                $privateKey = AesClass::decrypt($clients['private_key']);
-
+                
                 $jwt_scope = 'signature';
-
+                
                 try {
                     $response = $apiClient->requestJWTUserToken(
                         $clientId,
@@ -151,6 +158,9 @@ class MainController{
                         $jwt_scope
                     );
                     $this->main_model->verifyConsole($_GET['id']);
+                    if ($is_doc_new) {
+                        $this->main_model->updateConsole($console['id'],$new_docusign);
+                    }
                     view('jwt_correct');
                 } catch (Throwable $th) {
                     if (strpos($th->getMessage(), "consent_required") !== false) {
@@ -163,6 +173,11 @@ class MainController{
                             ]
                         );
                         view('jwt',['url'=>$authorizationURL]);
+                    }else{
+                        if ($is_doc_new) {
+                            $this->main_model->verifyConsole($_GET['id']);
+                        }
+                        view('jwt_error');
                     }
                 }
             }else{
