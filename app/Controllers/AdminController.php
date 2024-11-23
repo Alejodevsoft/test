@@ -121,6 +121,29 @@ class AdminController{
         return $this->returnRest($templates_response['success'],$templates_response['error']);
     }
 
+    public function setTemplate() {
+        $request    = $_POST;
+        if (!is_logged()) {
+            redirect();
+        }
+        if ($_SERVER['REQUEST_METHOD']!=='POST') {
+            redirect();
+        }
+        $request    = $_POST;
+        if (
+            empty($request['board_id']) ||
+            empty($request['contract_id']) ||
+            empty($request['template_id']) 
+        ) {
+            $this->loadErrorMain('Data not reported');
+        }
+
+        $console    = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
+        $api_key     = AesClass::decrypt($console['api_key_monday']);
+
+        echo Monday::setTemplate($api_key, $request['board_id'], $request['contract_id'], $request['template_id'] );
+    }
+
     private function loadErrorMain($text_error){
         set_error($text_error);
         redirect();
