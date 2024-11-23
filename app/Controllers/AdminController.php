@@ -36,6 +36,20 @@ class AdminController{
         return template_init('templates',$data);
     }
 
+    public function contracts(){
+        $board_id    = $_GET['board_id'];
+        $console     = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
+
+        $api_key     = AesClass::decrypt($console['api_key_monday']);
+        $data_contracts = Monday::getContracts($api_key, $board_id);
+
+        if ($data_contracts['success']) {
+            return $this->returnRest($data_contracts['success'],"ok",$data_contracts['data']);
+        }else{
+            return $this->returnRest($data_contracts['success'], $data_contracts['error']);
+        }
+    }
+
     public function docusign(){
         $data['select_aside'] = 30;
         $data['page_title'] = 'Docusign Config';
@@ -93,5 +107,15 @@ class AdminController{
     private function loadErrorMain($text_error){
         set_error($text_error);
         redirect();
+    }
+
+    private function returnRest($success, $message, $data_entry = []){
+        header('Content-Type: application/json; charset=utf-8');
+
+        $data['success'] = $success;
+        $data['message'] = $message;
+        $data['data'] = $data_entry;
+
+        echo json_encode($data);
     }
 }

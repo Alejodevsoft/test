@@ -12,6 +12,7 @@ return [
     'logout'            => 'App\Controllers\MainController::logout',
     'admin'             => 'App\Controllers\AdminController::admin',
     'admin/templates'          => 'App\Controllers\AdminController::templates',
+    'admin/contracts'          => 'App\Controllers\AdminController::contracts',
     'admin/docusign'          => 'App\Controllers\AdminController::docusign',
     'admin/update-docusign'   => 'App\Controllers\AdminController::updateDocusign'
 ];
