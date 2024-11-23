@@ -14,6 +14,7 @@ class AdminController{
     }
     
     public function admin(){
-
+        $data['page_title'] = 'Admin';
+        return template_init('admin',$data);
     }
 }
