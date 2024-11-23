@@ -106,6 +106,21 @@ class AdminController{
         redirect('jwt-verify?id='.$console['id']);
     }
 
+    public function getDocusignTemplates(){
+        $model = new MainModel();
+        $console    = $model->getConsoleByMondayId(get_user_data()['monday_id']);
+        $templates_response = Docusign::getTemplates(
+            $console['server_docusign'],
+            AesClass::decrypt($console['client_id_docusign']),
+            AesClass::decrypt($console['user_id_docusign']),
+            AesClass::decrypt($console['private_key'])
+        );
+        if ($templates_response['success']) {
+            return $this->returnRest($templates_response['success'],'ok',$templates_response['data']);
+        }
+        return $this->returnRest($templates_response['success'],$templates_response['error']);
+    }
+
     private function loadErrorMain($text_error){
         set_error($text_error);
         redirect();
