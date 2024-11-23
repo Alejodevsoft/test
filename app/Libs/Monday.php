@@ -4,7 +4,7 @@ namespace App\Libs;
 
 class Monday{
     public static function validateUser($userId, $apiKey){
-        $response   = self::curlMonday($apiKey,"{users(ids:[$userId]){name}}");
+        $response   = self::curlMonday($apiKey,"{users(ids:[$userId]){name}account{name,slug}}");
         $data = json_decode($response);
         if (isset($data->errors)) {
             $return['success'] = false;
@@ -19,6 +19,11 @@ class Monday{
             return $return;
         }
         $return['success'] = true;
+        if (!empty($data->data->account->name)) {
+            $return['data']['company_name'] = $data->data->account->name;
+        }else{
+            $return['data']['company_name'] = $data->data->account->slug;
+        }
         $return['data']['name'] = $data->data->users[0]->name;
 
         return $return;
