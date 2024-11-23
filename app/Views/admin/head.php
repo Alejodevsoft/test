@@ -22,6 +22,11 @@
                     </a>
                 </li>
                 <li <?= ($select_aside == 20)?'class="active"':"" ?>>
+                    <a href="<?= base_url()?>admin/templates">
+                        Templates Config
+                    </a>
+                </li>
+                <li <?= ($select_aside == 30)?'class="active"':"" ?>>
                     <a href="<?= base_url()?>admin/docusign">
                         Docusign Config
                     </a>

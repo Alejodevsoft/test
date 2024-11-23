@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Libs\AesClass;
 use App\Libs\Docusign;
+use App\Libs\Monday;
 use App\Models\MainModel;
 
 class AdminController{
@@ -21,8 +22,22 @@ class AdminController{
         return template_init('index',$data);
     }
 
-    public function docusign(){
+    public function templates(){
         $data['select_aside'] = 20;
+        $data['page_title'] = 'Templates Config';
+
+        $console     = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
+
+        $api_key     = AesClass::decrypt($console['api_key_monday']);
+        $data_boards = Monday::getBoards($api_key);
+
+        $data['boards'] = $data_boards;
+        
+        return template_init('templates',$data);
+    }
+
+    public function docusign(){
+        $data['select_aside'] = 30;
         $data['page_title'] = 'Docusign Config';
         return template_init('docusign',$data);
     }
@@ -43,7 +58,7 @@ class AdminController{
         ) {
             $this->loadErrorMain('Data not reported');
         }
-        $console    = $this->main_model->getUserByMondayId(get_user_data()['monday_id']);
+        $console    = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
         if ($console == null) {
             $this->loadErrorMain('User not found');
         }
