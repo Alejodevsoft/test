@@ -340,7 +340,7 @@ class MainController{
                         item_id: ' . $datosMonday['pulseId'] . ',
                         board_id: ' . $datosMonday['boardId'] . ',
                         column_id: "' . $datosMonday['columnIdStatus'] . '",
-                        value: "{\"label\":\"Firmado\"}"
+                        value: "{\"label\":\"Signed\"}"
                     ) {
                         id
                     }
