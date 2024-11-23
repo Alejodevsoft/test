@@ -51,7 +51,9 @@ class MainController{
         }
         $client = $this->main_model->getConsoleByMondayKey($request['api_key']);
         if ($client == null) {
-            $resutl_insert  = $this->main_model->createConsoleUnpaid($request['api_key']);
+            $new_user['api_key'] = $request['api_key'];
+            $new_user['client_name'] = $validate_user['data']['company_name'];
+            $resutl_insert  = $this->main_model->createConsoleUnpaid($new_user);
             if ($resutl_insert != null) {
                 $users_monday = Monday::getUsers($request['api_key']);
                 if ($users_monday['success']) {
@@ -70,6 +72,7 @@ class MainController{
             $this->loadErrorMain('Not purchase');
         }
         $user_data  = [
+            'client_name' => $validate_user['data']['company_name'],
             'user_name' => $validate_user['data']['name'],
             'monday_id' => $request['user_id']
         ];
