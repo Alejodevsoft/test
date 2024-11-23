@@ -58,9 +58,9 @@ function get_user_data(){
 
 function redirect($route = null){
     if (empty($route)) {
-        $route  = './';
+        $route  = base_url();
     }else{
-        $route  = './'.$route;
+        $route  = base_url().$route;
     }
     ob_end_clean();
     header('Location: '.$route);
