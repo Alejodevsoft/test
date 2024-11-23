@@ -1,6 +1,11 @@
 <?php
 
 function template_init($view,$data=[]){
+    if (empty($data['page_title'])) {
+        $data['page_title'] = 'MDs';
+    }else{
+        $data['page_title'] = 'MDs - '.$data['page_title'];
+    }
     if (sizeof($data) > 0) {
         foreach ($data as $var_name => $value) {
             $$var_name  = $value;
