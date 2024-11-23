@@ -108,6 +108,16 @@ class MainModel{
         return $stmt->rowCount();
     }
 
+    public function unVerifyConsole($id){
+        $sql = "UPDATE console SET
+                docusign_verify = 0 
+                WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
+
     public function deleteConsole($id){
         $sql = "DELETE FROM console WHERE id = :id";
         $stmt = $this->db->prepare($sql);

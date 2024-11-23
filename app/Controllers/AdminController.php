@@ -13,6 +13,12 @@ class AdminController{
         $this->main_model   = new MainModel();
         if (!is_logged()) {
             redirect();
+        }else{
+            $user_data  = get_user_data();
+            $console_data   = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
+            if (!boolval($console_data['docusign_verify'])) {
+                redirect();
+            }
         }
     }
     
@@ -70,24 +76,20 @@ class AdminController{
         $client_id_docusign = $request['client_id'];
         $user_id_docusign   = $request['user_id'];
         $private_key        = $request['private_key'];
-        $client['client_id_docusign']   = AesClass::encrypt($client_id_docusign);
-        $client['user_id_docusign']     = AesClass::encrypt($user_id_docusign);
-        $client['private_key']          = AesClass::encrypt($private_key);
-        $this->main_model->updateConsole($console['console_id'],$client);
-        $docusign   = Docusign::verifyConset($client_id_docusign,$user_id_docusign,$private_key);
-        if (!$docusign['success']) {
-            if ($docusign['redirect']) {
-                $_SESSION['redirect_url']   = $docusign['redirect_url'];
-            }
-        }
         if (
             AesClass::decrypt($console['client_id_docusign']) != $client_id_docusign ||
-            $console['user_id_docusign'] != $user_id_docusign ||
-            $console['private_key'] != $private_key 
+            AesClass::decrypt($console['user_id_docusign']) != $user_id_docusign ||
+            AesClass::decrypt($console['private_key']) != $private_key
         ) {
-            set_open_tab(base_url().'jwt-verify?id='.$console['console_id']);
+            $data_docusign    = [
+                'client_id_docusign'    => AesClass::encrypt($client_id_docusign),
+                'user_id_docusign'      => AesClass::encrypt($user_id_docusign),
+                'private_key'           => AesClass::encrypt($private_key)
+            ];
+            set_docusign_new($data_docusign);
         }
-        redirect('admin/docusign');
+        $this->main_model->unVerifyConsole($console['id']);
+        redirect('jwt-verify?id='.$console['id']);
     }
 
     private function loadErrorMain($text_error){

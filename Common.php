@@ -29,10 +29,6 @@ function set_error($error_message=''){
     $_SESSION['error']  = $error_message;
 }
 
-function set_open_tab($url=''){
-    $_SESSION['open_tab']  = $url;
-}
-
 function is_error_message(){
     return isset($_SESSION['error']);
 }
@@ -41,6 +37,34 @@ function error_message(){
     $error = $_SESSION['error'];
     unset($_SESSION['error']);
     return $error;
+}
+
+function set_reverify($rev){
+    $_SESSION['reverify']  = $rev;
+}
+
+function is_reverify(){
+    return isset($_SESSION['reverify']);
+}
+
+function reverify(){
+    $reverify   = $_SESSION['reverify'];
+    unset($_SESSION['reverify']);
+    return $reverify;
+}
+
+function set_docusign_new($data=''){
+    $_SESSION['docusign_new']  = $data;
+}
+
+function is_docusign_new(){
+    return isset($_SESSION['docusign_new']);
+}
+
+function docusign_new(){
+    $docusign_new  = $_SESSION['docusign_new'];
+    unset($_SESSION['docusign_new']);
+    return $docusign_new;
 }
 
 function set_login($valid = false,$user_data=[]){
