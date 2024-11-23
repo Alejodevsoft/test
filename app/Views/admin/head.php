@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $page_title?></title>
     <link rel="stylesheet" href="<?= base_url()?>src/css/general.css">
+    <link rel="stylesheet" href="<?= base_url()?>style.css">
 </head>
 <body>
     <div class="nav">
@@ -21,7 +22,7 @@
                     </a>
                 </li>
                 <li <?= ($select_aside == 20)?'class="active"':"" ?>>
-                    <a href="<?= base_url()?>docusign">
+                    <a href="<?= base_url()?>admin/docusign">
                         Docusign Config
                     </a>
                 </li>

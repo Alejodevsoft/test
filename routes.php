@@ -11,6 +11,6 @@ return [
     'upload-monday'     => 'App\Controllers\MainController::upload',
     'logout'            => 'App\Controllers\MainController::logout',
     'admin'             => 'App\Controllers\AdminController::admin',
-    'docusign'          => 'App\Controllers\AdminController::docusign',
-    'update-docusign'   => 'App\Controllers\AdminController::updateDocusign'
+    'admin/docusign'          => 'App\Controllers\AdminController::docusign',
+    'admin/update-docusign'   => 'App\Controllers\AdminController::updateDocusign'
 ];
