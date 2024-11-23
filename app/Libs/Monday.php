@@ -88,7 +88,7 @@ class Monday{
     }
 
     public static function getContracts($apiKey, $boardId) {
-        $response   = self::curlMonday($apiKey,"{boards(ids:$boardId){items_page{items{name,column_values(ids:\\\"texto__1\\\"){text,column{title}}}}}}");
+        $response   = self::curlMonday($apiKey,"{boards(ids:$boardId){items_page{items{name,id,column_values(ids:\\\"texto__1\\\"){text,column{title}}}}}}");
         $data = json_decode($response);
         if (isset($data->errors)) {
             $return['success'] = false;

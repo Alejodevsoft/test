@@ -31,3 +31,4 @@
 </div>
 
 <script src="<?= base_url()?>src/js/views/templates.js"></script>
+
