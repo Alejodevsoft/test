@@ -68,6 +68,34 @@ class MainModel{
         return $return;
     }
 
+    public function getUsersByConsoleId($console_id){
+        $tables = range(1,9);
+        $unionQueries = [];
+        $params = [];
+
+        foreach ($tables as $i) {
+            $paramName = ":console_id_$i";
+            $unionQueries[] = "
+                SELECT *
+                FROM user{$i}
+                WHERE console_id = $paramName
+            ";
+            $params[$paramName] = $console_id;
+        }
+        $sql = implode(" UNION ALL ", $unionQueries)." ORDER BY monday_id ASC";
+
+        $stmt = $this->db->prepare($sql);
+        foreach ($params as $paramName => $value) {
+            $stmt->bindValue($paramName, $value, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+        $return = $stmt->fetchAll();
+        if ($return===false) {
+            return null;
+        }
+        return $return;
+    }
+
     public function createConsoleUnpaid($data){
         $api_key_monday = AesClass::encrypt($data['api_key']);
         $zero   = 0;
