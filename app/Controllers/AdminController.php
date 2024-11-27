@@ -9,14 +9,15 @@ use App\Models\MainModel;
 
 class AdminController{
     private $main_model;
+    private $console_data;
     function __construct(){
         $this->main_model   = new MainModel();
         if (!is_logged()) {
             redirect();
         }else{
             $user_data  = get_user_data();
-            $console_data   = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
-            if (!boolval($console_data['docusign_verify'])) {
+            $this->console_data = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
+            if (!boolval($this->console_data['docusign_verify'])) {
                 redirect();
             }
         }
@@ -25,6 +26,34 @@ class AdminController{
     public function admin(){
         $data['select_aside'] = 10;
         $data['page_title'] = 'Admin';
+
+        $users_admin    = $this->main_model->getUsersByConsoleId($this->console_data['id']);
+        if ($users_admin != null & sizeof($users_admin) > 0) {
+            $users_admin    = array_column($users_admin,'monday_id','monday_id');
+        }
+
+        $users  = [];
+        $users_monday   = Monday::getUsers(AesClass::decrypt($this->console_data['api_key_monday']));
+        if ($users_monday != null & sizeof($users_monday['data']) > 0) {
+            foreach ($users_monday['data'] as $monday_user) {
+                if ($monday_user->is_admin) {
+                    $item   = [
+                        'id'    => $monday_user->id,
+                        'name'  => $monday_user->name,
+                        'email' => $monday_user->email
+                    ];
+                    if (isset($users_admin[$monday_user->id])) {
+                        $item['active'] = true;
+                    }else{
+                        $item['active'] = false;
+                    }
+                    $users[] = $item;
+                }
+            }
+        }
+
+        $data['users']  = $users;
+
         return template_init('index',$data);
     }
 
