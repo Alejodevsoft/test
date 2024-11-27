@@ -227,6 +227,10 @@ body{
     margin-right: auto;
     background-color: #21222d;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+    &.users{
+        width: 30%;
+        margin-left: 0;
+    }
 }
 
 .styled-table thead tr {
@@ -238,7 +242,7 @@ body{
 .styled-table th, .styled-table td {
     padding: 12px 15px;
     text-align: left;
-    color: #7a7a7a;
+    color: #adadad;
 }
 
 .styled-table tbody tr:nth-of-type(even) {
