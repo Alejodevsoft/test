@@ -1,6 +1,8 @@
 <?php
 namespace App\Libs;
 
+use DocuSign\eSign\Api\AccountsApi;
+use DocuSign\eSign\Api\BillingApi;
 use DocuSign\eSign\Api\TemplatesApi;
 use DocuSign\eSign\Client\ApiClient;
 use DocuSign\eSign\Client\ApiException;
@@ -112,5 +114,77 @@ class Docusign{
         }
         return $data_return;
     }
+
+    public static function getAccountData($server_docusign, $clientId, $userId, $privateKey) {
+        if ($server_docusign == 0) {
+            $oauthBasePath = 'account-d.docusign.com';
+        } else {
+            $oauthBasePath = 'account.docusign.com';
+        }
+        $apiClient = new ApiClient();
+        $apiClient->getOAuth()->setOAuthBasePath($oauthBasePath);
+        $jwt_scope = 'signature';
+
+        $response = $apiClient->requestJWTUserToken(
+            $clientId,
+            $userId,
+            $privateKey,
+            $jwt_scope
+        );
+        
+        $accessToken = $response[0]->getAccessToken();
+        $accountId = $apiClient->getUserInfo($response[0]->getAccessToken())[0]["accounts"][0]["account_id"];
+
+        if ($server_docusign == 0) {
+            $basePath = 'https://demo.docusign.net/restapi';
+        } else if($server_docusign > 0 && $server_docusign < 5){
+            $number = $server_docusign;
+            $basePath = "https://na$number.docusign.net/restapi";
+        } elseif($server_docusign == 5){
+            $basePath = "https://ca.docusign.net/restapi";
+        } elseif($server_docusign == 6){
+            $basePath = "https://au.docusign.net/restapi";
+        } elseif($server_docusign == 7){
+            $basePath = "https://eu.docusign.net/restapi";
+        }
+
+        $configuration = new Configuration();
+        $configuration->setHost($basePath);
+        $configuration->addDefaultHeader('Authorization', 'Bearer ' . $accessToken);
+
+        $apiClient = new ApiClient($configuration);
+        
+        if ($server_docusign == 0) {
+            $oauthBasePath = 'account-d.docusign.com';
+        } else {
+            $oauthBasePath = 'account.docusign.com';
+        }
+        $apiClient->getOAuth()->setOAuthBasePath($oauthBasePath);
+        
+
+        $acocuntsApi = new AccountsApi($apiClient);
+
+        try {
+            $accountData    = $acocuntsApi->getAccountInformation($accountId);
+            $data_return    = [
+                'name'                                  => $accountData['account_name'],
+                'plan_name'                             => $accountData['plan_name'],
+                'billing_period_end_date'               => $accountData['billing_period_end_date'],
+                'billing_period_envelopes_allowed'      => $accountData['billing_period_envelopes_allowed'],
+                'billing_period_envelopes_sent'         => $accountData['billing_period_envelopes_sent'],
+                'billing_period_envelopes_available'    => (is_numeric($accountData['billing_period_envelopes_allowed']) && is_numeric($accountData['billing_period_envelopes_sent']))?$accountData['billing_period_envelopes_allowed']-$accountData['billing_period_envelopes_sent']:'0'
+            ];
+            $data_return['success'] = true;
+            $data_return['data']    = $data_return;
+
+        } catch (ApiException $e) {
+            $data_return['success'] = false;
+            $data_return['error']   = $e->getMessage();
+        } catch (Throwable $e){
+            $data_return['success'] = false;
+            $data_return['error']   = $e->getMessage();
+        }
+        return $data_return;
+    }    
 }
 ?>

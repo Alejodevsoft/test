@@ -217,6 +217,11 @@ body{
 .hidden{
     display: none !important;
 }
+.board-tables{
+    display: flex;
+    align-items: flex-start;
+    gap: 2%;
+}
 .styled-table {
     margin-top: 50px;
     box-sizing: border-box;
@@ -227,10 +232,6 @@ body{
     margin-right: auto;
     background-color: #21222d;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
-    &.users{
-        width: 30%;
-        margin-left: 0;
-    }
 }
 
 .styled-table thead tr {
