@@ -52,7 +52,13 @@ class AdminController{
             }
         }
 
-        $data['users']  = $users;
+        $data['users']      = $users;
+        $data['docusign']   = Docusign::getAccountData(
+            $this->console_data['server_docusign'],
+            AesClass::decrypt($this->console_data['client_id_docusign']),
+            AesClass::decrypt($this->console_data['user_id_docusign']),
+            AesClass::decrypt($this->console_data['private_key'])
+        );
 
         return template_init('index',$data);
     }
