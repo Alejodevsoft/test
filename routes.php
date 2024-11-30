@@ -6,6 +6,7 @@ return [
     'save-docusign'         => 'App\Controllers\MainController::saveDocusign',
     'logout'                => 'App\Controllers\MainController::logout',
     'send-to-sign'          => 'App\Controllers\WebhookController::send',
+    'signatures-query'      => 'App\Controllers\WebhookController::signaturesQuery',
     'upload-monday'         => 'App\Controllers\WebhookController::upload',
     'admin'                 => 'App\Controllers\AdminController::admin',
     'admin/templates'       => 'App\Controllers\AdminController::templates',
