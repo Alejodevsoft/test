@@ -170,6 +170,29 @@ class Monday{
         ];
     }
 
+    public static function setSignerStatus($apiKey,$boardId,$signer_item_id){
+        $response = self::curlMondayJsonQuery($apiKey, '
+                mutation {
+                    change_column_value(
+                        item_id: '.$signer_item_id.',
+                        board_id: '.$boardId.',
+                        column_id: "status",
+                        value: "{\"label\":\"Signed\"}"
+                    ) {
+                        id
+                    }
+                }
+            ');
+
+        $data = json_decode($response);
+        if (isset($data->errors)) {
+            $return['success'] = false;
+            $return['error'] = "Error Api Key";
+
+            return $return;
+        }
+    }
+
     public static function validatePurchase(){
         $return['success'] = true;
         return $return;
