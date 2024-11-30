@@ -20,7 +20,7 @@
         <table class="styled-table">
             <thead>
                 <tr>
-                    <th>Contracts</th>
+                    <th>Envelops</th>
                     <th>Docusign Template</th>
                 </tr>
             </thead>
