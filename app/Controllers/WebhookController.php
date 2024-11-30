@@ -26,7 +26,7 @@ class WebhookController{
         $clients = $model->getConsoleByMondayId($datamonday->payload->inputFields->userId);
 
         if (!empty($clients)) {
-            $responseMonday = json_decode(Monday::genericCurl(AesClass::decrypt($clients['api_key_monday']),'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: text){text}subitems{name,column_values(types: email){text}}}}'));
+            $responseMonday = json_decode(Monday::genericCurl(AesClass::decrypt($clients['api_key_monday']),'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: text){text}subitems{id,name,column_values(types: email){text}}}}'));
             
             $responseMonday2 = json_decode(Monday::genericCurl(AesClass::decrypt($clients['api_key_monday']),'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: file){id}}}'));
 
@@ -79,12 +79,14 @@ class WebhookController{
         $apiClient = new ApiClient($configuration);
         $envelopeApi = new EnvelopesApi($apiClient);
         $signers = [];
+        $signersCustom = [];
         foreach ($responseMonday->data->items[0]->subitems as $key => $signer ) {
             $signers[$key] = new TemplateRole([
                 'email' => $signer->column_values[0]->text,
                 'name' => $signer->name,
                 'role_name' => 'Signer'.($key+1)
             ]);
+            $signersCustom[]    = 'Signer'.($key+1).'__'.$signer->id;
         }
         $customFields = new CustomFields([
             'text_custom_fields' => [
@@ -112,6 +114,11 @@ class WebhookController{
                     'name' => 'columnIdStatus',
                     'value' => $responseMonday3->data->items[0]->column_values[0]->id,
                     'show' => 'false'
+                ]),
+                new TextCustomField([
+                    'name' => 'signers',
+                    'value' => implode('||',$signersCustom),
+                    'show' => 'false'
                 ])
             ]
         ]);
@@ -127,11 +134,22 @@ class WebhookController{
 
     public function upload(){
         $docusign = json_decode(file_get_contents('php://input'));
+
+        $datosMonday = array_column($docusign->data->envelopeSummary->customFields->textCustomFields,'value','name');
+        $clients = $this->main_model->getConsoleByMondayId($datosMonday['userIdMonday']);
+        if (sizeof($docusign->recipients) > 0 && sizeof($docusign->recipients->signers) > 0 ) {
+            $signers_docusign   = array_column($docusign->recipients->signers,'status','roleName');
+            $signers_monday = explode('||',$datosMonday['signers']);
+            if (sizeof($signers_monday) > 0) {
+                foreach ($signers_monday as $signer_monday) {
+                    $data_signer    = explode('__',$signer_monday);
+                    if (isset($signers_docusign[$data_signer[0]]) && $signers_docusign[$data_signer[0]] == 'completed') {
+                        Monday::setSignerStatus(AesClass::decrypt($clients['api_key_monday']),$datosMonday['boardId'],$data_signer[1]);
+                    }
+                }
+            }
+        }
         if ($docusign->data->envelopeSummary->status == "completed") {
-
-            $datosMonday = array_column($docusign->data->envelopeSummary->customFields->textCustomFields,'value','name');
-
-            $clients = $this->main_model->getConsoleByMondayId($datosMonday['userIdMonday']);
 
             foreach ($docusign->data->envelopeSummary->envelopeDocuments as $key =>$document) {
                 $base64File = $document->PDFBytes;
