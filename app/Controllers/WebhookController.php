@@ -220,4 +220,8 @@ class WebhookController{
             curl_close($curl);
         }
     }
+
+    public function signaturesQuery(){        
+        $datamonday = json_decode(file_get_contents('php://input'));
+    }
 }
