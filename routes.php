@@ -11,7 +11,7 @@ return [
     'admin'                 => 'App\Controllers\AdminController::admin',
     'admin/templates'       => 'App\Controllers\AdminController::templates',
     'admin/list-templates'  => 'App\Controllers\AdminController::getDocusignTemplates',
-    'admin/contracts'       => 'App\Controllers\AdminController::contracts',
+    'admin/envelops'        => 'App\Controllers\AdminController::envelops',
     'admin/docusign'        => 'App\Controllers\AdminController::docusign',
     'admin/update-docusign' => 'App\Controllers\AdminController::updateDocusign',
     'admin/set-template'    => 'App\Controllers\AdminController::setTemplate'

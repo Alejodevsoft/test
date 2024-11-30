@@ -77,17 +77,17 @@ class AdminController{
         return template_init('templates',$data);
     }
 
-    public function contracts(){
+    public function envelops(){
         $board_id    = $_GET['board_id'];
         $console     = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
 
-        $api_key     = AesClass::decrypt($console['api_key_monday']);
-        $data_contracts = Monday::getContracts($api_key, $board_id);
+        $api_key        = AesClass::decrypt($console['api_key_monday']);
+        $data_envelops  = Monday::getEnvelops($api_key, $board_id);
 
-        if ($data_contracts['success']) {
-            return $this->returnRest($data_contracts['success'],"ok",$data_contracts['data']);
+        if ($data_envelops['success']) {
+            return $this->returnRest($data_envelops['success'],"ok",$data_envelops['data']);
         }else{
-            return $this->returnRest($data_contracts['success'], $data_contracts['error']);
+            return $this->returnRest($data_envelops['success'], $data_envelops['error']);
         }
     }
 
