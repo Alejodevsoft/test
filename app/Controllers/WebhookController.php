@@ -1,7 +1,8 @@
-<?
+<?php
 namespace App\Controllers;
 
 use App\Libs\AesClass;
+use App\Libs\Docusign;
 use App\Libs\Monday;
 use App\Models\MainModel;
 use DocuSign\eSign\Client\ApiClient;
@@ -223,5 +224,22 @@ class WebhookController{
 
     public function signaturesQuery(){        
         $datamonday = json_decode(file_get_contents('php://input'));
+        
+        $client     = $this->main_model->getConsoleByMondayId($datamonday->payload->inputFields->userId);
+
+        $monday_response    = Monday::getTemplateId(AesClass::decrypt($client['api_key_monday']),$datamonday->payload->inputFields->itemId);
+        if ($monday_response['success']) {
+            $template_id    = $monday_response['data'];
+            $template_info  = Docusign::getTemplateInfo(
+                $client['server_docusign'],
+                AesClass::decrypt($client['client_id_docusign']),
+                AesClass::decrypt($client['user_id_docusign']),
+                AesClass::decrypt($client['private_key']),
+                $template_id                                
+            );
+            if ($template_info['success']) {
+                $monday_mutation    = Monday::setSignerFields(AesClass::decrypt($client['api_key_monday']),$datamonday->payload->inputFields->itemId,$template_info['data']);
+            }
+        }
     }
 }
