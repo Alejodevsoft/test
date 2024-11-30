@@ -10,7 +10,7 @@ document.getElementById('boardSelect').addEventListener("change", (event) => {
     loader.classList.remove('hidden');
     errordiv.classList.add('hidden');
     // alert(select.getSelected());
-    fetch(getUrl()+"admin/contracts?board_id="+select.getSelected(), {
+    fetch(getUrl()+"admin/envelops?board_id="+select.getSelected(), {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
