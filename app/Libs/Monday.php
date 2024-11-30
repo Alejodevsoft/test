@@ -109,8 +109,28 @@ class Monday{
         return $return;
     }
 
+    public static function getTemplateId($apiKey,$item_id){
+        $response   = self::curlMonday($apiKey,"query{items(ids:$item_id){column_values(types:text){text}}}");
+        $data = json_decode($response);
+        if (isset($data->errors)) {
+            $return['success'] = false;
+            $return['error'] = "Error Api Key";
+
+            return $return;
+        }
+        if (empty($data->data->items)) {
+            $return['success'] = false;
+            $return['error'] = "Error not data";
+
+            return $return;
+        }
+        $return['success'] = true;
+        $return['data'] = $data->data->items[0]->column_values[0]->text;
+
+        return $return;
+    }
+
     public static function setTemplate($apiKey, $boardId, $contractId, $templateId){
-        // Llamar a curlMonday
         $response = self::curlMondayJsonQuery($apiKey, "mutation {change_multiple_column_values(item_id:$contractId, board_id:$boardId, column_values: \"{\\\"texto__1\\\":\\\"$templateId\\\"}\") {id}}");
 
         $data = json_decode($response);
@@ -120,6 +140,34 @@ class Monday{
 
             return $return;
         }
+    }
+
+    public static function setSignerFields($apiKey,$item_id,$signers){
+        if (sizeof($signers) < 1) {
+            $return['success'] = false;
+            $return['error'] = "Error empty signers";
+        }
+        $success    = true; 
+        $error      = ''; 
+        foreach ($signers as $signer) {
+            $response   = self::curlMonday($apiKey,'mutation { create_subitem(parent_item_id: '.$item_id.', item_name: \\"Insert name\\", column_values: \\"{\\\\\\"texto__1\\\\\\":\\\\\\"'.$signer['role'].'\\\\\\",\\\\\\"n_meros__1\\\\\\":\\\\\\"'.$signer['order'].'\\\\\\"}\\") { id } }');
+            $data = json_decode($response);
+            if (isset($data->errors)) {
+                $success = false;
+                $error .= "Error Api Key";
+            }
+            if (empty($data->data->items)) {
+                $success = false;
+                $error .= "Error not data";
+            }
+            $success = true;
+            $data = [''];
+        }
+        return [
+            'success'   => $success,
+            'data'      => $data,
+            'error'     => $error
+        ];
     }
 
     public static function validatePurchase(){
