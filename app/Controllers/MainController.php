@@ -103,7 +103,7 @@ class MainController{
         $client['user_id_docusign']     = AesClass::encrypt($user_id_docusign);
         $client['private_key']          = AesClass::encrypt($private_key);
         $this->main_model->updateConsole($user['console_id'],$client);
-        $docusign   = Docusign::verifyConset($client_id_docusign,$user_id_docusign,$private_key);
+        $docusign   = Docusign::verifyConsent($client_id_docusign,$user_id_docusign,$private_key);
         if (!$docusign['success']) {
             if ($docusign['redirect']) {
                 $_SESSION['redirect_url']   = $docusign['redirect_url'];
