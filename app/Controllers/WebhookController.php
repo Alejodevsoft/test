@@ -25,12 +25,14 @@ class WebhookController{
         $model = new MainModel();
         $clients = $model->getConsoleByMondayId($datamonday->payload->inputFields->userId);
 
+        $apiKeyMonday   = '';
         if (!empty($clients)) {
-            $responseMonday = json_decode(Monday::genericCurl(AesClass::decrypt($clients['api_key_monday']),'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: text){text}subitems{id,name,column_values(types: email){text}}}}'));
+            $apiKeyMonday   = AesClass::decrypt($clients['api_key_monday']);
+            $responseMonday = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: text){text}subitems{id,name,column_values(types: email){text}}}}'));
             
-            $responseMonday2 = json_decode(Monday::genericCurl(AesClass::decrypt($clients['api_key_monday']),'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: file){id}}}'));
+            $responseMonday2 = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: file){id}}}'));
 
-            $responseMonday3 = json_decode(Monday::genericCurl(AesClass::decrypt($clients['api_key_monday']),'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: status){id}}}'));
+            $responseMonday3 = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: status){id}}}'));
 
             $clientId = AesClass::decrypt($clients['client_id_docusign']);
             $userId = AesClass::decrypt($clients['user_id_docusign']);
@@ -80,6 +82,7 @@ class WebhookController{
         $envelopeApi = new EnvelopesApi($apiClient);
         $signers = [];
         $signersCustom = [];
+        $signersInProgress = [];
         foreach ($responseMonday->data->items[0]->subitems as $key => $signer ) {
             $signers[$key] = new TemplateRole([
                 'email' => $signer->column_values[0]->text,
@@ -87,6 +90,7 @@ class WebhookController{
                 'role_name' => 'Signer'.($key+1)
             ]);
             $signersCustom[]    = 'Signer'.($key+1).'__'.$signer->id;
+            $signersInProgress[]    = $signer->id;
         }
         $customFields = new CustomFields([
             'text_custom_fields' => [
@@ -130,6 +134,7 @@ class WebhookController{
             'custom_fields' => $customFields
         ]);
         $results = $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
+        Monday::setSignersInProgress($apiKeyMonday,$signersInProgress);
     }
 
     public function upload(){
@@ -214,29 +219,7 @@ class WebhookController{
                 }
             ';
 
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => 'https://api.monday.com/v2',
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => '',
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => json_encode(array('query' => $query)),
-                CURLOPT_HTTPHEADER => array(
-                    'Authorization: ' . AesClass::decrypt($clients['api_key_monday']),
-                    'Content-Type: application/json'
-                ),
-            ));
-
-            $response = curl_exec($curl);
-
-            if(curl_errno($curl)) {
-                echo 'Error:' . curl_error($curl);
-            }
-
-            curl_close($curl);
+            Monday::genericCurlJsonQuery(AesClass::decrypt($clients['api_key_monday']),$query);
         }
     }
 
@@ -256,7 +239,7 @@ class WebhookController{
                 $template_id                                
             );
             if ($template_info['success']) {
-                $monday_mutation    = Monday::setSignerFields(AesClass::decrypt($client['api_key_monday']),$datamonday->payload->inputFields->itemId,$template_info['data']);
+                Monday::setSignerFields(AesClass::decrypt($client['api_key_monday']),$datamonday->payload->inputFields->itemId,$template_info['data']);
             }
         }
     }
