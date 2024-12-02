@@ -2,7 +2,6 @@
 namespace App\Libs;
 
 use DocuSign\eSign\Api\AccountsApi;
-use DocuSign\eSign\Api\BillingApi;
 use DocuSign\eSign\Api\TemplatesApi;
 use DocuSign\eSign\Client\ApiClient;
 use DocuSign\eSign\Client\ApiException;
@@ -10,8 +9,26 @@ use DocuSign\eSign\Configuration;
 use Exception;
 use Throwable;
 
+/**
+ * Docusign Class
+ *
+ * @category Lib
+ * @package  App\Libs
+ * @author   Fabián-V,Sebastián-R,Smith-T,Alejandro-M
+ */
 class Docusign{
-    public static function verifyConset($clientId,$userId,$privateKey){
+    
+    /**
+     * Verify consent
+     * 
+     * Valida si el cliente de Docusign ha dado consentimiento
+     *
+     * @param string $clientId ID cliente de Docusign
+     * @param string $userId ID user de Docusign
+     * @param string $privateKey Clave privada de Docusign
+     * @return array $data_return
+     */
+    public static function verifyConsent($clientId,$userId,$privateKey){
         $apiClient = new ApiClient();
         $apiClient->getOAuth()->setOAuthBasePath('account-d.docusign.com');
         $data_return    = [];
@@ -43,6 +60,17 @@ class Docusign{
         return $data_return;
     }
 
+    /**
+     * Get templates
+     * 
+     * Obtiene todas las plantillas asociadas al cliente de Docusign
+     *
+     * @param string $server_docusign server del cliente de Docusign
+     * @param string $clientId ID cliente de Docusign
+     * @param string $userId ID user de Docusign
+     * @param string $privateKey Clave privada de Docusign
+     * @return array $data_return
+     */
     public static function getTemplates($server_docusign,$clientId,$userId,$privateKey){
         if ($server_docusign == 0) {
             $oauthBasePath = 'account-d.docusign.com';
@@ -115,6 +143,17 @@ class Docusign{
         return $data_return;
     }
 
+    /**
+     * Get account data
+     * 
+     * Obtiene la información del cliente de Docusign
+     *
+     * @param string $server_docusign server del cliente de Docusign
+     * @param string $clientId ID cliente de Docusign
+     * @param string $userId ID user de Docusign
+     * @param string $privateKey Clave privada de Docusign
+     * @return array $data_return
+     */
     public static function getAccountData($server_docusign, $clientId, $userId, $privateKey) {
         if ($server_docusign == 0) {
             $oauthBasePath = 'account-d.docusign.com';
@@ -187,6 +226,18 @@ class Docusign{
         return $data_return;
     }    
 
+    /**
+     * Get template info
+     * 
+     * Obtiene la información de la plantilla
+     *
+     * @param string $server_docusign server del cliente de Docusign
+     * @param string $clientId ID cliente de Docusign
+     * @param string $userId ID user de Docusign
+     * @param string $privateKey Clave privada de Docusign
+     * @param string $templateId Id del template de Docusign
+     * @return array $data_return
+     */
     public static function getTemplateInfo($server_docusign,$clientId,$userId,$privateKey,$templateId){
         if ($server_docusign == 0) {
             $oauthBasePath = 'account-d.docusign.com';
