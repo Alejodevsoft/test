@@ -170,14 +170,22 @@ class Monday{
         ];
     }
 
-    public static function setSignerStatus($apiKey,$boardId,$signer_item_id){
+    public static function setSignerStatus($apiKey,$signer_item_id,$status){
+        $boardData  = self::curlMonday($apiKey,'{items(ids: '.$signer_item_id.') {board{id}}}');
+        $boardData = json_decode($boardData);
+        if (isset($boardData->errors)) {
+            $return['success'] = false;
+            $return['error'] = "Error Board Api Key";
+
+            return $return;
+        }
         $response = self::curlMondayJsonQuery($apiKey, '
                 mutation {
                     change_column_value(
                         item_id: '.$signer_item_id.',
-                        board_id: '.$boardId.',
+                        board_id: '.$boardData->data->items[0]->board->id.',
                         column_id: "status",
-                        value: "{\"label\":\"Signed\"}"
+                        value: "{\"label\":\"'.$status.'\"}"
                     ) {
                         id
                     }
@@ -187,7 +195,39 @@ class Monday{
         $data = json_decode($response);
         if (isset($data->errors)) {
             $return['success'] = false;
-            $return['error'] = "Error Api Key";
+            $return['error'] = "Error signer status";
+
+            return $return;
+        }
+    }
+
+    public static function setSignersInProgress($apiKey,$signers){
+        $boardData  = self::curlMonday($apiKey,'{items(ids: '.$signers[0].') {board{id}}}');
+        $boardData = json_decode($boardData);
+        if (isset($boardData->errors)) {
+            $return['success'] = false;
+            $return['error'] = "Error Board Api Key";
+
+            return $return;
+        }
+        $query  = 'mutation{';
+        foreach ($signers as $key => $signer) {
+            $query  .= 'item'.$key.': change_column_value(
+                            item_id: '.$signer.',
+                            board_id: '.$boardData->data->items[0]->board->id.',
+                            column_id: "status",
+                            value: "{\"label\":\"In progress\"}"
+                        ) {
+                            id
+                        }';
+        }
+        $query  .= '}';
+        $response = self::curlMondayJsonQuery($apiKey, $query);
+
+        $data = json_decode($response);
+        if (isset($data->errors)) {
+            $return['success'] = false;
+            $return['error'] = "Error Signers in progress";
 
             return $return;
         }
@@ -200,6 +240,10 @@ class Monday{
 
     public static function genericCurl($apiKey,$query){
         return self::curlMonday($apiKey,$query);
+    }
+
+    public static function genericCurlJsonQuery($apiKey,$query){
+        return self::curlMondayJsonQuery($apiKey,$query);
     }
 
     private static function curlMonday($apiKey,$query){
