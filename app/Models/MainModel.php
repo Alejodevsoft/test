@@ -6,7 +6,19 @@ use App\Config\Database;
 use App\Libs\AesClass;
 use PDO;
 
+/**
+ * Database Class
+ *
+ * @category Model
+ * @package  App\Models
+ * @author   Fabián-V,Sebastián-R,Smith-T,Alejandro-M
+ */
 class MainModel{
+    /**
+     * Db connection
+     *
+     * @var db instancia de la conexión a la base de datos
+     */
     private $db;
 
     public function __construct(){
@@ -14,6 +26,14 @@ class MainModel{
         $this->db = $database->connect();
     }
 
+    /**
+     * Get console by id
+     * 
+     * Obtiene la console usando el id como filtro
+     *
+     * @param String $id identificador de la console
+     * @return array|null console
+     */
     public function getConsoleById($id){
         $sql = "SELECT * FROM console WHERE id = :id";
         $stmt = $this->db->prepare($sql);
@@ -26,6 +46,14 @@ class MainModel{
         return $return;
     }
 
+    /**
+     * Get console by monday key
+     * 
+     * Obtiene la console usando el api key de monday como filtro
+     *
+     * @param String $api_key Api key de la console
+     * @return array|null console
+     */
     public function getConsoleByMondayKey($api_key){
         $api_key_monday = AesClass::encrypt($api_key);
         $sql = "SELECT * FROM console WHERE api_key_monday = :api_key_monday";
@@ -39,6 +67,14 @@ class MainModel{
         return $return;
     }
 
+    /**
+     * Get console by monday id
+     * 
+     * Obtiene la console usando el user_id en la tabla de usuarios como filtro
+     *
+     * @param String $monday_id ID del usuario de Monday
+     * @return array|null console
+     */
     public function getConsoleByMondayId($monday_id){
         $table  = 'user'.substr($monday_id,0,1);
         $sql = "SELECT c.id,c.api_key_monday,c.client_id_docusign,c.user_id_docusign,c.server_docusign,c.private_key,c.docusign_verify FROM $table
@@ -55,6 +91,14 @@ class MainModel{
         return $return;
     }
 
+    /**
+     * Get user by monday id
+     * 
+     * Obtiene el user usando el user_id como filtro
+     *
+     * @param String $monday_id ID del usuario de Monday
+     * @return array|null user
+     */
     public function getUserByMondayId($monday_id){
         $table  = 'user'.substr($monday_id,0,1);
         $sql = "SELECT * FROM $table WHERE monday_id = :monday_id";
@@ -68,6 +112,14 @@ class MainModel{
         return $return;
     }
 
+    /**
+     * Get users by console id
+     * 
+     * Obtiene los user usando el console_id como filtro
+     *
+     * @param String $console_id ID de la console
+     * @return array|null [users]
+     */
     public function getUsersByConsoleId($console_id){
         $tables = range(1,9);
         $unionQueries = [];
@@ -96,6 +148,14 @@ class MainModel{
         return $return;
     }
 
+    /**
+     * Create console unpaid
+     * 
+     * Crea la console por primera vez
+     *
+     * @param array $data de la info del la console
+     * @return int console ID
+     */
     public function createConsoleUnpaid($data){
         $api_key_monday = AesClass::encrypt($data['api_key']);
         $zero   = 0;
@@ -109,6 +169,15 @@ class MainModel{
         return $this->db->lastInsertId();
     }
 
+    /**
+     * Update console
+     * 
+     * Actualiza la console
+     *
+     * @param string $id ID de la console
+     * @param array $data de la info del la console
+     * @return int rows afected
+     */
     public function updateConsole($id, $data){
         $sql = "UPDATE console SET 
                 server_docusign = :server_docusign,
@@ -126,6 +195,14 @@ class MainModel{
         return $stmt->rowCount();
     }
 
+    /**
+     * Verify console
+     * 
+     * Activa la bandera de verificación de la console
+     *
+     * @param string $id ID de la console
+     * @return int rows afected
+     */
     public function verifyConsole($id){
         $sql = "UPDATE console SET
                 docusign_verify = 1 
@@ -136,6 +213,14 @@ class MainModel{
         return $stmt->rowCount();
     }
 
+    /**
+     * Unverify console
+     * 
+     * Desactiva la bandera de verificación de la console
+     *
+     * @param string $id ID de la console
+     * @return int rows afected
+     */
     public function unVerifyConsole($id){
         $sql = "UPDATE console SET
                 docusign_verify = 0 
@@ -146,6 +231,14 @@ class MainModel{
         return $stmt->rowCount();
     }
 
+    /**
+     * Delete console
+     * 
+     * Borra la console
+     *
+     * @param string $id ID de la console
+     * @return int rows afected
+     */
     public function deleteConsole($id){
         $sql = "DELETE FROM console WHERE id = :id";
         $stmt = $this->db->prepare($sql);
@@ -154,6 +247,15 @@ class MainModel{
         return $stmt->rowCount();
     }
 
+    /**
+     * Create multiple users
+     * 
+     * Crea los users a partir de la lista
+     *
+     * @param string $console_id ID de la console
+     * @param array $users Lista usuarios 
+     * @return bool finalizado
+     */
     public function createMultipleUsers($console_id,$users) {
         // Agrupar usuarios por el dígito inicial de su ID
         $groupedUsers = [];
