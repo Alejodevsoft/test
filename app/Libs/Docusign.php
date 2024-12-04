@@ -123,15 +123,19 @@ class Docusign{
         try {
             $templatesList = $templatesApi->listTemplates($accountId);
             $templatesData = [];
-            foreach ($templatesList->getEnvelopeTemplates() as $template) {
-                $templatesData[] = [
-                    'template_id' => $template->getTemplateId(),
-                    'template_name' => $template->getName()
-                ];
+            if (sizeof($templatesList->getEnvelopeTemplates()) > 0) {
+                foreach ($templatesList->getEnvelopeTemplates() as $template) {
+                    $templatesData[] = [
+                        'template_id' => $template->getTemplateId(),
+                        'template_name' => $template->getName()
+                    ];
+                }            
+                $data_return['success'] = true;
+                $data_return['data']    = $templatesData;
+            }else{            
+                $data_return['success'] = false;
+                $data_return['error']   = 'Docusign ist templates is empty';
             }
-            
-            $data_return['success'] = true;
-            $data_return['data']    = $templatesData;
 
         } catch (ApiException $e) {
             $data_return['success'] = false;
