@@ -173,4 +173,7 @@ body{
     button:hover{
         border-color: #007bff;
     }
+    .error-message{
+        color: #EE1122;
+    }
 }

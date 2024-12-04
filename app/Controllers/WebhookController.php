@@ -148,8 +148,12 @@ class WebhookController{
             if (sizeof($signers_monday) > 0) {
                 foreach ($signers_monday as $signer_monday) {
                     $data_signer    = explode('__',$signer_monday);
-                    if (isset($signers_docusign[$data_signer[0]]) && $signers_docusign[$data_signer[0]] == 'completed') {
-                        Monday::setSignerStatus(AesClass::decrypt($clients['api_key_monday']),$data_signer[1],'Completed');
+                    if (isset($signers_docusign[$data_signer[0]])) {
+                        if ($signers_docusign[$data_signer[0]] == 'completed') {
+                            Monday::setSignerStatus(AesClass::decrypt($clients['api_key_monday']),$data_signer[1],'Completed');
+                        }elseif ($signers_docusign[$data_signer[0]] == 'declined') {
+                            Monday::setSignerStatus(AesClass::decrypt($clients['api_key_monday']),$data_signer[1],'Declined');
+                        }
                     }
                 }
             }
@@ -213,6 +217,21 @@ class WebhookController{
                         board_id: ' . $datosMonday['boardId'] . ',
                         column_id: "' . $datosMonday['columnIdStatus'] . '",
                         value: "{\"label\":\"Signed\"}"
+                    ) {
+                        id
+                    }
+                }
+            ';
+
+            Monday::genericCurlJsonQuery(AesClass::decrypt($clients['api_key_monday']),$query);
+        }elseif ($docusign->data->envelopeSummary->status == "declined") {
+            $query = '
+                mutation {
+                    change_column_value(
+                        item_id: ' . $datosMonday['pulseId'] . ',
+                        board_id: ' . $datosMonday['boardId'] . ',
+                        column_id: "' . $datosMonday['columnIdStatus'] . '",
+                        value: "{\"label\":\"Declined\"}"
                     ) {
                         id
                     }
