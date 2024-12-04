@@ -286,7 +286,7 @@ class Monday{
     /**
      * Set signers in progress
      * 
-     * Cambia el valor del estado de todos los firmantes en item/envelop de Monday
+     * Cambia el valor del estado a "In progress" de todos los firmantes en item/envelop de Monday
      *
      * @param string $apiKey Api Key de Monday
      * @param array $signers Lista de firmantes 
@@ -308,6 +308,47 @@ class Monday{
                             board_id: '.$boardData->data->items[0]->board->id.',
                             column_id: "status",
                             value: "{\"label\":\"In progress\"}"
+                        ) {
+                            id
+                        }';
+        }
+        $query  .= '}';
+        $response = self::curlMondayJsonQuery($apiKey, $query);
+
+        $data = json_decode($response);
+        if (isset($data->errors)) {
+            $return['success'] = false;
+            $return['error'] = "Error Signers in progress";
+
+            return $return;
+        }
+    }
+
+    /**
+     * Set signers declined
+     * 
+     * Cambia el valor del estado a "Declined" de todos los firmantes en item/envelop de Monday
+     *
+     * @param string $apiKey Api Key de Monday
+     * @param array $signers Lista de firmantes 
+     * @return array $return
+     */
+    public static function setSignersDeclined($apiKey,$signers){
+        $boardData  = self::curlMonday($apiKey,'{items(ids: '.$signers[0].') {board{id}}}');
+        $boardData = json_decode($boardData);
+        if (isset($boardData->errors)) {
+            $return['success'] = false;
+            $return['error'] = "Error Board Api Key";
+
+            return $return;
+        }
+        $query  = 'mutation{';
+        foreach ($signers as $key => $signer) {
+            $query  .= 'item'.$key.': change_column_value(
+                            item_id: '.$signer.',
+                            board_id: '.$boardData->data->items[0]->board->id.',
+                            column_id: "status",
+                            value: "{\"label\":\"Declined\"}"
                         ) {
                             id
                         }';
