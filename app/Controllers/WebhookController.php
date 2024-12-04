@@ -142,10 +142,12 @@ class WebhookController{
 
         $datosMonday = array_column($docusign->data->envelopeSummary->customFields->textCustomFields,'value','name');
         $clients = $this->main_model->getConsoleByMondayId($datosMonday['userIdMonday']);
+        $signers    = [];
         if ($docusign->data->envelopeSummary->recipients != null && sizeof($docusign->data->envelopeSummary->recipients->signers) > 0 ) {
             $signers_docusign   = array_column($docusign->data->envelopeSummary->recipients->signers,'status','roleName');
             $signers_monday = explode('||',$datosMonday['signers']);
             if (sizeof($signers_monday) > 0) {
+                $signer = $signers_monday;
                 foreach ($signers_monday as $signer_monday) {
                     $data_signer    = explode('__',$signer_monday);
                     if (isset($signers_docusign[$data_signer[0]])) {
@@ -239,6 +241,9 @@ class WebhookController{
             ';
 
             Monday::genericCurlJsonQuery(AesClass::decrypt($clients['api_key_monday']),$query);
+            if (sizeof($signers)) {
+                Monday::setSignersDeclined(AesClass::decrypt($clients['api_key_monday']),$signers);
+            }
         }
     }
 
