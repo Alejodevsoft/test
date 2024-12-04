@@ -12,6 +12,9 @@
         <div class="images">
             <img src="src/mds_white.png" alt="">
         </div>
+        <?php if(is_error_message()){?>
+            <span class="error-message"><?= error_message()?></span>
+        <?php }?>
         <span class="help">* To continue you must know the data that appear in the following form (these are necessary for any change in the integration).</span>
         <form action="" method="post">
             <div class="form-group">

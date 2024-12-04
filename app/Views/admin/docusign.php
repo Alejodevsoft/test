@@ -1,6 +1,9 @@
 <div class="login-body">
     <div class="container">
         <h1>Update Docusign Data</h1>
+        <?php if(is_error_message()){?>
+            <span class="error-message"><?= error_message()?></span>
+        <?php }?>
         <span class="help" style="Color:red">* The data entered below must be from the production environment, do not enter test server data, if you do not have this data, please contact support.</span>
         <form action="<?= base_url()?>admin/update-docusign" method="post">
             <input type="hidden" value="<?php echo $monday_id?>" name="monday_id">

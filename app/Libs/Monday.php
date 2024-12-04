@@ -2,7 +2,24 @@
 
 namespace App\Libs;
 
+/**
+ * Monday Class
+ *
+ * @category Lib
+ * @package  App\Libs
+ * @author   Fabián-V,Sebastián-R,Smith-T,Alejandro-M
+ */
 class Monday{
+
+    /**
+     * Validate user
+     * 
+     * Verifica la existencia del usuario con la api de Monday
+     *
+     * @param string $userId ID de usuario de Monday
+     * @param string $apiKey Api Key de Monday
+     * @return array $return
+     */
     public static function validateUser($userId, $apiKey){
         $response   = self::curlMonday($apiKey,"{users(ids:[$userId]){name}account{name,slug}}");
         $data = json_decode($response);
@@ -29,6 +46,14 @@ class Monday{
         return $return;
     }
 
+    /**
+     * Get users
+     * 
+     * Obtiene todos los usuarios en la api de Monday
+     *
+     * @param string $apiKey Api Key de Monday
+     * @return array $return
+     */
     public static function getUsers($apiKey){
         $response   = self::curlMonday($apiKey,"query{users{name email id is_admin}}");
         $data = json_decode($response);
@@ -50,6 +75,14 @@ class Monday{
         return $return;
     }
 
+    /**
+     * Get boards
+     * 
+     * Obtiene todas los boards en la api de Monday
+     *
+     * @param string $apiKey Api Key de Monday
+     * @return array $return
+     */
     public static function getBoards($apiKey) {
         $allBoards = [];
         $hasMore = true;
@@ -87,6 +120,15 @@ class Monday{
         return $return;
     }
 
+    /**
+     * Get envelops
+     * 
+     * Obtiene todas los evelops de un board en la api de Monday, cuando el board es compatible
+     *
+     * @param string $apiKey Api Key de Monday
+     * @param string $boardId ID del board de Monday
+     * @return array $return
+     */
     public static function getEnvelops($apiKey, $boardId) {
         $response   = self::curlMonday($apiKey,"{boards(ids:$boardId){items_page{items{name,id,column_values(ids:\\\"texto__1\\\"){text,column{title}}}}}}");
         $data = json_decode($response);
@@ -109,8 +151,17 @@ class Monday{
         return $return;
     }
 
-    public static function getTemplateId($apiKey,$item_id){
-        $response   = self::curlMonday($apiKey,"query{items(ids:$item_id){column_values(types:text){text}}}");
+    /**
+     * Get template ID
+     * 
+     * Obtiene el ID del template de Docusign almacenado en el envelop de Monday
+     *
+     * @param string $apiKey Api Key de Monday
+     * @param string $itemId ID del item/envelop de Monday
+     * @return array $return
+     */
+    public static function getTemplateId($apiKey,$itemId){
+        $response   = self::curlMonday($apiKey,"query{items(ids:$itemId){column_values(types:text){text}}}");
         $data = json_decode($response);
         if (isset($data->errors)) {
             $return['success'] = false;
@@ -130,8 +181,19 @@ class Monday{
         return $return;
     }
 
-    public static function setTemplate($apiKey, $boardId, $contractId, $templateId){
-        $response = self::curlMondayJsonQuery($apiKey, "mutation {change_multiple_column_values(item_id:$contractId, board_id:$boardId, column_values: \"{\\\"texto__1\\\":\\\"$templateId\\\"}\") {id}}");
+    /**
+     * Set template
+     * 
+     * Cambia ID del template de Docusign almacenado en el envelop de Monday
+     *
+     * @param string $apiKey Api Key de Monday
+     * @param string $boardId ID del board de Monday
+     * @param string $itemId ID del item/envelop de Monday
+     * @param string $templateId ID del template de Docusign
+     * @return array $return
+     */
+    public static function setTemplate($apiKey, $boardId, $itemId, $templateId){
+        $response = self::curlMondayJsonQuery($apiKey, "mutation {change_multiple_column_values(item_id:$itemId, board_id:$boardId, column_values: \"{\\\"texto__1\\\":\\\"$templateId\\\"}\") {id}}");
 
         $data = json_decode($response);
         if (isset($data->errors)) {
@@ -142,7 +204,17 @@ class Monday{
         }
     }
 
-    public static function setSignerFields($apiKey,$item_id,$signers){
+    /**
+     * Set signer fields
+     * 
+     * Crea los subitems dentro del item/envelop de Monday
+     *
+     * @param string $apiKey Api Key de Monday
+     * @param string $itemId ID del item/envelop de Monday
+     * @param array $signers Lista de firmantes 
+     * @return array $return
+     */
+    public static function setSignerFields($apiKey,$itemId,$signers){
         if (sizeof($signers) < 1) {
             $return['success'] = false;
             $return['error'] = "Error empty signers";
@@ -150,7 +222,7 @@ class Monday{
         $success    = true; 
         $error      = ''; 
         foreach ($signers as $signer) {
-            $response   = self::curlMonday($apiKey,'mutation { create_subitem(parent_item_id: '.$item_id.', item_name: \\"Insert name\\", column_values: \\"{\\\\\\"texto__1\\\\\\":\\\\\\"'.$signer['role'].'\\\\\\",\\\\\\"n_meros__1\\\\\\":\\\\\\"'.$signer['order'].'\\\\\\"}\\") { id } }');
+            $response   = self::curlMonday($apiKey,'mutation { create_subitem(parent_item_id: '.$itemId.', item_name: \\"Insert name\\", column_values: \\"{\\\\\\"texto__1\\\\\\":\\\\\\"'.$signer['role'].'\\\\\\",\\\\\\"n_meros__1\\\\\\":\\\\\\"'.$signer['order'].'\\\\\\"}\\") { id } }');
             $data = json_decode($response);
             if (isset($data->errors)) {
                 $success = false;
@@ -170,8 +242,18 @@ class Monday{
         ];
     }
 
-    public static function setSignerStatus($apiKey,$signer_item_id,$status){
-        $boardData  = self::curlMonday($apiKey,'{items(ids: '.$signer_item_id.') {board{id}}}');
+    /**
+     * Set signer status
+     * 
+     * Cambia el valor del estado del firmante en el subitem de Monday
+     *
+     * @param string $apiKey Api Key de Monday
+     * @param string $signerItemId ID del subitem de Monday
+     * @param array $status Nuevo estado del firmante
+     * @return array $return
+     */
+    public static function setSignerStatus($apiKey,$signerItemId,$status){
+        $boardData  = self::curlMonday($apiKey,'{items(ids: '.$signerItemId.') {board{id}}}');
         $boardData = json_decode($boardData);
         if (isset($boardData->errors)) {
             $return['success'] = false;
@@ -182,7 +264,7 @@ class Monday{
         $response = self::curlMondayJsonQuery($apiKey, '
                 mutation {
                     change_column_value(
-                        item_id: '.$signer_item_id.',
+                        item_id: '.$signerItemId.',
                         board_id: '.$boardData->data->items[0]->board->id.',
                         column_id: "status",
                         value: "{\"label\":\"'.$status.'\"}"
@@ -201,6 +283,15 @@ class Monday{
         }
     }
 
+    /**
+     * Set signers in progress
+     * 
+     * Cambia el valor del estado de todos los firmantes en item/envelop de Monday
+     *
+     * @param string $apiKey Api Key de Monday
+     * @param array $signers Lista de firmantes 
+     * @return array $return
+     */
     public static function setSignersInProgress($apiKey,$signers){
         $boardData  = self::curlMonday($apiKey,'{items(ids: '.$signers[0].') {board{id}}}');
         $boardData = json_decode($boardData);
@@ -233,7 +324,15 @@ class Monday{
         }
     }
 
-    public static function validatePurchase(){
+    /**
+     * Validate purchase
+     * 
+     * Valida el estado de la suscripción de la implementación en monday
+     *
+     * @param string $apiKey Api Key de Monday
+     * @return array $return
+     */
+    public static function validatePurchase($apiKey){
         $return['success'] = true;
         return $return;
     }
