@@ -60,7 +60,7 @@ class MainController{
                 }
             }
         }
-        $validate_purchase  = Monday::validatePurchase();
+        $validate_purchase  = Monday::validatePurchase($request['api_key']);
         if (!$validate_purchase['success']) {
             $this->loadErrorMain('Not purchase');
         }
