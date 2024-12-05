@@ -14,5 +14,6 @@ return [
     'admin/envelops'        => 'App\Controllers\AdminController::envelops',
     'admin/docusign'        => 'App\Controllers\AdminController::docusign',
     'admin/update-docusign' => 'App\Controllers\AdminController::updateDocusign',
-    'admin/set-template'    => 'App\Controllers\AdminController::setTemplate'
+    'admin/set-template'    => 'App\Controllers\AdminController::setTemplate',
+    'admin/set-user-active' => 'App\Controllers\AdminController::setUserActive'
 ];

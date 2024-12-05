@@ -21,7 +21,7 @@ class Monday{
      * @return array $return
      */
     public static function validateUser($userId, $apiKey){
-        $response   = self::curlMonday($apiKey,"{users(ids:[$userId]){name}account{name,slug}}");
+        $response   = self::curlMonday($apiKey,"{users(ids:[$userId]){name,email,is_admin}account{name,slug}}");
         $data = json_decode($response);
         if (isset($data->errors)) {
             $return['success'] = false;
@@ -41,7 +41,9 @@ class Monday{
         }else{
             $return['data']['company_name'] = $data->data->account->slug;
         }
-        $return['data']['name'] = $data->data->users[0]->name;
+        $return['data']['name']     = $data->data->users[0]->name;
+        $return['data']['email']    = $data->data->users[0]->email;
+        $return['data']['is_admin'] = $data->data->users[0]->is_admin;
 
         return $return;
     }

@@ -15,6 +15,10 @@ class AdminController{
         if (!is_logged()) {
             redirect();
         }else{
+            $user   = $this->main_model->getUserByMondayId(get_user_data()['monday_id']);
+            if ($user == null) {
+                $this->logout();
+            }
             $user_data  = get_user_data();
             $this->console_data = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
             if (!boolval($this->console_data['docusign_verify'])) {
@@ -164,7 +168,6 @@ class AdminController{
         if ($_SERVER['REQUEST_METHOD']!=='POST') {
             redirect();
         }
-        $request    = $_POST;
         if (
             empty($request['board_id']) ||
             empty($request['contract_id']) ||
@@ -174,9 +177,56 @@ class AdminController{
         }
 
         $console    = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
-        $api_key     = AesClass::decrypt($console['api_key_monday']);
+        $api_key    = AesClass::decrypt($console['api_key_monday']);
 
-        echo Monday::setTemplate($api_key, $request['board_id'], $request['contract_id'], $request['template_id'] );
+        echo Monday::setTemplate($api_key,$request['board_id'],$request['contract_id'],$request['template_id']);
+    }
+
+    public function setUserActive(){
+        $request    = $_POST;
+        if (!is_logged()) {
+            redirect();
+        }
+        if ($_SERVER['REQUEST_METHOD']!=='POST') {
+            redirect();
+        }
+        if (
+            empty($request['monday_id']) ||
+            empty($request['active'])
+        ) {
+            return $this->returnRest(false,'Data not reported');
+        }
+        if ($request['monday_id'] === get_user_data()['monday_id']) {
+            return $this->returnRest(false,'User cannot change their own status');
+        }
+        $console    = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
+        if ($request['active'] === 'false') {
+            $this->main_model->deleteUser($console['id'],$request['monday_id']);
+            return $this->returnRest(true,'User removed',$request);
+        }else{
+            $user   = $this->main_model->getUserByMondayId($request['monday_id']);
+            if ($user != null) {
+                return $this->returnRest(true,'User already exists');
+            }else{
+                $api_key        = AesClass::decrypt($console['api_key_monday']);
+                $monday_user    = Monday::validateUser($request['monday_id'],$api_key);
+                if (!$monday_user['success']) {
+                    return $this->returnRest(false,'An error has occurred on Monday');
+                }
+                if (!$monday_user['data']['is_admin']) {
+                    return $this->returnRest(false,'The user cannot be activated because he is not an administrator');
+                }
+                $user   = [
+                    'monday_id' => $request['monday_id'],
+                    'name'      => $monday_user['data']['name'],
+                    'email'     => $monday_user['data']['email']
+                ];
+                if ($this->main_model->createUser($console['id'],$user) > 0) {
+                    return $this->returnRest(true,'User activated');
+                }
+                return $this->returnRest(false,'An error has ocurred');
+            }
+        }
     }
 
     private function loadErrorMain($text_error){
@@ -193,4 +243,9 @@ class AdminController{
 
         echo json_encode($data);
     }
+
+    private function logout(){
+        session_destroy();
+        redirect();
+    } 
 }
