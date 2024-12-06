@@ -47,8 +47,9 @@ class MainController{
         }
         $client = $this->main_model->getConsoleByMondayKey($request['api_key']);
         if ($client == null) {
-            $new_user['api_key'] = $request['api_key'];
-            $new_user['client_name'] = $validate_user['data']['company_name'];
+            $new_user['api_key']            = $request['api_key'];
+            $new_user['client_name']        = $validate_user['data']['company_name'];
+            $new_user['client_account_id']  = $validate_user['data']['account_id'];
             $resutl_insert  = $this->main_model->createConsoleUnpaid($new_user);
             if ($resutl_insert != null) {
                 $users_monday = Monday::getUsers($request['api_key']);
