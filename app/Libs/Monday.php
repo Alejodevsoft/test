@@ -41,9 +41,10 @@ class Monday{
         }else{
             $return['data']['company_name'] = $data->data->account->slug;
         }
-        $return['data']['name']     = $data->data->users[0]->name;
-        $return['data']['email']    = $data->data->users[0]->email;
-        $return['data']['is_admin'] = $data->data->users[0]->is_admin;
+        $return['data']['name']         = $data->data->users[0]->name;
+        $return['data']['email']        = $data->data->users[0]->email;
+        $return['data']['is_admin']     = $data->data->users[0]->is_admin;
+        $return['data']['account_id']   = $data->account_id;
 
         return $return;
     }
