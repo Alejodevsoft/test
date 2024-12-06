@@ -12,7 +12,7 @@
                 <tr>
                     <td><?= $user['name']?></td>
                     <td>
-                        <a monday-id="<?= $user['id']?>" href="#"><?= $user['active']?'Active':'Unactive'?></a>
+                        <button class="user-main <?= $user['active']?'actived':'unactived'?>" monday-id="<?= $user['id']?>"><?= $user['active']?'Actived':'Unactived'?></button>
                     </td>
                 </tr>
             <?php }?>
@@ -53,3 +53,4 @@
         </tbody>
     </table>
 </div>
+<script src="<?= base_url()?>src/js/views/index.js"></script>

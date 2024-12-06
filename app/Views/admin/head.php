@@ -35,7 +35,8 @@
             </ul>
         </nav>
         <div class="name">
-            <?= get_user_data()['client_name']?>
+            <span><?= get_user_data()['client_name']?></span>
+            <a class="logout" href="<?= base_url().'logout'?>">Logout</a>
         </div>
     </div>
     <div class="body">
