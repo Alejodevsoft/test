@@ -70,71 +70,71 @@ class WebhookController{
             } elseif($clients['server_docusign'] == 7){
                 $basePath = "https://eu.docusign.net/restapi";
             }
-
-
-        }
        
-        $configuration = new Configuration();
-        $configuration->setHost($basePath);
-        $configuration->addDefaultHeader('Authorization', 'Bearer ' . $accessToken);
-    
-        $apiClient = new ApiClient($configuration);
-        $envelopeApi = new EnvelopesApi($apiClient);
-        $signers = [];
-        $signersCustom = [];
-        $signersInProgress = [];
-        foreach ($responseMonday->data->items[0]->subitems as $key => $signer ) {
-            $signers[$key] = new TemplateRole([
-                'email' => $signer->column_values[0]->text,
-                'name' => $signer->name,
-                'role_name' => 'Signer'.($key+1)
+            $configuration = new Configuration();
+            $configuration->setHost($basePath);
+            $configuration->addDefaultHeader('Authorization', 'Bearer ' . $accessToken);
+        
+            $apiClient = new ApiClient($configuration);
+            $envelopeApi = new EnvelopesApi($apiClient);
+            $signers = [];
+            $signersCustom = [];
+            $signersInProgress = [];
+            foreach ($responseMonday->data->items[0]->subitems as $key => $signer ) {
+                $signers[$key] = new TemplateRole([
+                    'email' => $signer->column_values[0]->text,
+                    'name' => $signer->name,
+                    'role_name' => 'Signer'.($key+1)
+                ]);
+                $signersCustom[]    = 'Signer'.($key+1).'__'.$signer->id;
+                $signersInProgress[]    = $signer->id;
+            }
+            $customFields = new CustomFields([
+                'text_custom_fields' => [
+                    new TextCustomField([
+                        'name' => 'pulseId',
+                        'value' => $datamonday->payload->inputFields->itemId,
+                        'show' => 'false'
+                    ]),
+                    new TextCustomField([
+                        'name' => 'boardId',
+                        'value' => $datamonday->payload->inputFields->boardId,
+                        'show' => 'false'
+                    ]),
+                    new TextCustomField([
+                        'name' => 'userIdMonday',
+                        'value' => $datamonday->payload->inputFields->userId,
+                        'show' => 'false'
+                    ]),
+                    new TextCustomField([
+                        'name' => 'columnId',
+                        'value' => $responseMonday2->data->items[0]->column_values[0]->id,
+                        'show' => 'false'
+                    ]),
+                    new TextCustomField([
+                        'name' => 'columnIdStatus',
+                        'value' => $responseMonday3->data->items[0]->column_values[0]->id,
+                        'show' => 'false'
+                    ]),
+                    new TextCustomField([
+                        'name' => 'signers',
+                        'value' => implode('||',$signersCustom),
+                        'show' => 'false'
+                    ])
+                ]
             ]);
-            $signersCustom[]    = 'Signer'.($key+1).'__'.$signer->id;
-            $signersInProgress[]    = $signer->id;
+        
+            $envelopeDefinition = new EnvelopeDefinition([
+                'template_id' => $responseMonday->data->items[0]->column_values[0]->text,
+                'template_roles' => $signers,
+                'status' => 'sent',
+                'custom_fields' => $customFields
+            ]);
+            $results = $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
+            Monday::setSignersInProgress($apiKeyMonday,$signersInProgress);
+        }else{
+            
         }
-        $customFields = new CustomFields([
-            'text_custom_fields' => [
-                new TextCustomField([
-                    'name' => 'pulseId',
-                    'value' => $datamonday->payload->inputFields->itemId,
-                    'show' => 'false'
-                ]),
-                new TextCustomField([
-                    'name' => 'boardId',
-                    'value' => $datamonday->payload->inputFields->boardId,
-                    'show' => 'false'
-                ]),
-                new TextCustomField([
-                    'name' => 'userIdMonday',
-                    'value' => $datamonday->payload->inputFields->userId,
-                    'show' => 'false'
-                ]),
-                new TextCustomField([
-                    'name' => 'columnId',
-                    'value' => $responseMonday2->data->items[0]->column_values[0]->id,
-                    'show' => 'false'
-                ]),
-                new TextCustomField([
-                    'name' => 'columnIdStatus',
-                    'value' => $responseMonday3->data->items[0]->column_values[0]->id,
-                    'show' => 'false'
-                ]),
-                new TextCustomField([
-                    'name' => 'signers',
-                    'value' => implode('||',$signersCustom),
-                    'show' => 'false'
-                ])
-            ]
-        ]);
-    
-        $envelopeDefinition = new EnvelopeDefinition([
-            'template_id' => $responseMonday->data->items[0]->column_values[0]->text,
-            'template_roles' => $signers,
-            'status' => 'sent',
-            'custom_fields' => $customFields
-        ]);
-        $results = $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
-        Monday::setSignersInProgress($apiKeyMonday,$signersInProgress);
     }
 
     public function upload(){
