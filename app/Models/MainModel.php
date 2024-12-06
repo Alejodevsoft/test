@@ -70,9 +70,9 @@ class MainModel{
     /**
      * Get console by monday id
      * 
-     * Obtiene la console usando el user_id en la tabla de usuarios como filtro
+     * Obtiene la console usando el user_id en la tabla de users como filtro
      *
-     * @param String $monday_id ID del usuario de Monday
+     * @param String $monday_id ID del user de Monday
      * @return array|null console
      */
     public function getConsoleByMondayId($monday_id){
@@ -96,7 +96,7 @@ class MainModel{
      * 
      * Obtiene el user usando el user_id como filtro
      *
-     * @param String $monday_id ID del usuario de Monday
+     * @param String $monday_id ID del user de Monday
      * @return array|null user
      */
     public function getUserByMondayId($monday_id){
@@ -253,11 +253,11 @@ class MainModel{
      * Crea los users a partir de la lista
      *
      * @param string $console_id ID de la console
-     * @param array $users Lista usuarios 
+     * @param array $users Lista users 
      * @return bool finalizado
      */
     public function createMultipleUsers($console_id,$users) {
-        // Agrupar usuarios por el dígito inicial de su ID
+        // Agrupar users por el dígito inicial de su ID
         $groupedUsers = [];
     
         foreach ($users as $user) {
@@ -266,7 +266,7 @@ class MainModel{
             $groupedUsers[$tableName][] = $user;
         }
     
-        // Insertar usuarios en sus respectivas tablas
+        // Insertar users en sus respectivas tablas
         foreach ($groupedUsers as $table => $usersInTable) {
             $sql = "INSERT INTO $table (console_id, monday_id, name, email) VALUES ";
             $values = [];
@@ -292,5 +292,45 @@ class MainModel{
         }
     
         return true;
+    }
+
+    /**
+     * Create user
+     * 
+     * Crea un user un user
+     *
+     * @param string $console_id ID de la console
+     * @param array $user data del user de Monday
+     * @return int rows afected
+     */
+    public function createUser($console_id,$user){
+        $table  = 'user'.substr($user['monday_id'],0,1);
+        $sql = "INSERT INTO $table (console_id,monday_id,name,email) VALUES (:console_id,:monday_id,:name,:email)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':console_id', $console_id, PDO::PARAM_INT);
+        $stmt->bindParam(':monday_id', $user['monday_id'], PDO::PARAM_INT);
+        $stmt->bindParam(':name', $user['name'], PDO::PARAM_STR);
+        $stmt->bindParam(':email', $user['email'], PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
+
+    /**
+     * Delete user
+     * 
+     * Borra un user
+     *
+     * @param string $console_id ID de la console
+     * @param String $monday_id ID del user de Monday
+     * @return int rows afected
+     */
+    public function deleteUser($console_id,$monday_id){
+        $table  = 'user'.substr($monday_id,0,1);
+        $sql = "DELETE FROM $table WHERE console_id = :console_id AND monday_id = :monday_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':console_id', $console_id, PDO::PARAM_INT);
+        $stmt->bindParam(':monday_id', $monday_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->rowCount();
     }
 }

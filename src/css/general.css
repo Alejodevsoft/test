@@ -70,6 +70,26 @@ body{
                 }
             }
         }
+        .name{
+            width: 100%;
+            background-color: #232431;
+            border-radius: 5px;
+            box-sizing: border-box;
+            padding: 3%;
+            span{
+                width: 100%;
+                display: block;
+                font-size: 1.2rem;
+            }
+            .logout{
+                display: block;
+                width: 100%;
+                font-size: 1.1rem;
+                &:hover{
+                    color: #AAAAAA;
+                }
+            }
+        }
     }
     .body{
         width: 100%;
@@ -264,6 +284,10 @@ body{
     font-size: 14px;
     padding: 10px;
     margin: 0;
+    &.user-main{
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
 }
 #error{
     color: red;

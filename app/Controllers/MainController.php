@@ -42,6 +42,9 @@ class MainController{
         if (!$validate_user['success']) {
             $this->loadErrorMain($validate_user['error']);
         }
+        if (!$validate_user['data']['is_admin']) {
+            $this->loadErrorMain('Unauthorized user');
+        }
         $client = $this->main_model->getConsoleByMondayKey($request['api_key']);
         if ($client == null) {
             $new_user['api_key'] = $request['api_key'];
@@ -58,6 +61,11 @@ class MainController{
                         $this->main_model->createMultipleUsers($resutl_insert,$admin_users);
                     }
                 }
+            }
+        }else{
+            $user   = $this->main_model->getUserByMondayId($request['user_id']);
+            if ($user == null) {
+                $this->loadErrorMain('Unauthorized user');
             }
         }
         $validate_purchase  = Monday::validatePurchase($request['api_key']);
