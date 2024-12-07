@@ -8,7 +8,7 @@
 </head>
 <body class="login-body">
     <div class="container">
-        <h1>Welcome to MD (Integration Monday & Docusign)</h1>
+        <h1>Welcome to MDS (Integration Monday & Docusign)</h1>
         <div class="images">
             <img src="src/mds_white.png" alt="">
         </div>
