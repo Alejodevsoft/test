@@ -201,21 +201,22 @@ class AdminController{
         }
         $console    = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
         if ($request['active'] === 'false') {
-            $this->main_model->deleteUser($console['id'],$request['monday_id']);
-            return $this->returnRest(true,'User removed',$request);
+            $this->main_model->setActiveUser(false,$console['id'],$request['monday_id']);
+            return $this->returnRest(true,'User unactived',$request);
         }else{
+            $api_key        = AesClass::decrypt($console['api_key_monday']);
+            $monday_user    = Monday::validateUser($request['monday_id'],$api_key);
+            if (!$monday_user['success']) {
+                return $this->returnRest(false,'An error has occurred on Monday');
+            }
+            if (!$monday_user['data']['is_admin']) {
+                return $this->returnRest(false,'The user cannot be activated because he is not an administrator');
+            }
             $user   = $this->main_model->getUserByMondayId($request['monday_id']);
             if ($user != null) {
-                return $this->returnRest(true,'User already exists');
+                $this->main_model->setActiveUser(true,$console['id'],$request['monday_id']);
+                return $this->returnRest(true,'User actived',$request);
             }else{
-                $api_key        = AesClass::decrypt($console['api_key_monday']);
-                $monday_user    = Monday::validateUser($request['monday_id'],$api_key);
-                if (!$monday_user['success']) {
-                    return $this->returnRest(false,'An error has occurred on Monday');
-                }
-                if (!$monday_user['data']['is_admin']) {
-                    return $this->returnRest(false,'The user cannot be activated because he is not an administrator');
-                }
                 $user   = [
                     'monday_id' => $request['monday_id'],
                     'name'      => $monday_user['data']['name'],
