@@ -26,7 +26,7 @@ class WebhookController{
         $clients = $model->getConsoleByMondayId($datamonday->payload->inputFields->userId);
 
         $apiKeyMonday   = '';
-        if (!empty($clients)) {
+        if ($clients != null && $clients['active'] == 1) {
             $apiKeyMonday   = AesClass::decrypt($clients['api_key_monday']);
             $responseMonday = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: text){text}subitems{id,name,column_values(types: email){text}}}}'));
             
@@ -130,10 +130,23 @@ class WebhookController{
                 'status' => 'sent',
                 'custom_fields' => $customFields
             ]);
-            $results = $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
+            $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
             Monday::setSignersInProgress($apiKeyMonday,$signersInProgress);
-        }else{
-            
+        }elseif ($clients != null){
+            $responseMonday3 = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: status){id}}}'));
+            $query = '
+                mutation {
+                    change_column_value(
+                        item_id: ' . $datamonday->payload->inputFields->itemId . ',
+                        board_id: ' . $datamonday->payload->inputFields->boardId . ',
+                        column_id: "' . $responseMonday3->data->items[0]->column_values[0]->id . '",
+                        value: "{\"label\":\"Unsent\"}"
+                    ) {
+                        id
+                    }
+                }
+            ';
+            Monday::genericCurlJsonQuery(AesClass::decrypt($clients['api_key_monday']),$query);
         }
     }
 
