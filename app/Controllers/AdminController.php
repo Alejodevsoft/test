@@ -19,6 +19,9 @@ class AdminController{
             if ($user == null) {
                 $this->logout();
             }
+            if ($user['active'] == 0) {
+                $this->logout();
+            }
             $user_data  = get_user_data();
             $this->console_data = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
             if (!boolval($this->console_data['docusign_verify'])) {
@@ -33,7 +36,7 @@ class AdminController{
 
         $users_admin    = $this->main_model->getUsersByConsoleId($this->console_data['id']);
         if ($users_admin != null & sizeof($users_admin) > 0) {
-            $users_admin    = array_column($users_admin,'monday_id','monday_id');
+            $users_admin    = array_column($users_admin,'active','monday_id');
         }
 
         $users  = [];
@@ -46,7 +49,7 @@ class AdminController{
                         'name'  => $monday_user->name,
                         'email' => $monday_user->email
                     ];
-                    if (isset($users_admin[$monday_user->id])) {
+                    if (isset($users_admin[$monday_user->id]) && $users_admin[$monday_user->id] == 1) {
                         $item['active'] = true;
                     }else{
                         $item['active'] = false;
