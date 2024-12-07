@@ -77,7 +77,7 @@ class MainModel{
      */
     public function getConsoleByMondayId($monday_id){
         $table  = 'user'.substr($monday_id,0,1);
-        $sql = "SELECT c.id,c.api_key_monday,c.client_id_docusign,c.user_id_docusign,c.server_docusign,c.private_key,c.docusign_verify FROM $table
+        $sql = "SELECT c.id,c.api_key_monday,c.client_id_docusign,c.user_id_docusign,c.server_docusign,c.private_key,c.docusign_verify,active FROM $table
                 JOIN console AS c ON $table.console_id = c.id
                 WHERE monday_id = :monday_id
         ";
@@ -312,6 +312,28 @@ class MainModel{
         $stmt->bindParam(':monday_id', $user['monday_id'], PDO::PARAM_INT);
         $stmt->bindParam(':name', $user['name'], PDO::PARAM_STR);
         $stmt->bindParam(':email', $user['email'], PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
+
+    /**
+     * Set active user
+     * 
+     * Setea el valor de activación de un user
+     *
+     * @param boolean $active Estado nuevo para el ususario
+     * @param string $console_id ID de la console
+     * @param String $monday_id ID del user de Monday
+     * @return int rows afected
+     */
+    public function setActiveUser($active=false,$console_id,$monday_id){
+        $active = $active?1:0;
+        $table  = 'user'.substr($monday_id,0,1);
+        $sql = "UPDATE $table set active = :active WHERE console_id = :console_id AND monday_id = :monday_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':active', $active, PDO::PARAM_INT);
+        $stmt->bindParam(':console_id', $console_id, PDO::PARAM_INT);
+        $stmt->bindParam(':monday_id', $monday_id, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->rowCount();
     }
