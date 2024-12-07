@@ -77,7 +77,7 @@ class MainModel{
      */
     public function getConsoleByMondayId($monday_id){
         $table  = 'user'.substr($monday_id,0,1);
-        $sql = "SELECT c.id,c.api_key_monday,c.client_id_docusign,c.user_id_docusign,c.server_docusign,c.private_key,c.docusign_verify FROM $table
+        $sql = "SELECT c.id,c.api_key_monday,c.client_id_docusign,c.user_id_docusign,c.server_docusign,c.private_key,c.docusign_verify,active FROM $table
                 JOIN console AS c ON $table.console_id = c.id
                 WHERE monday_id = :monday_id
         ";
