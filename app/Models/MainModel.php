@@ -317,6 +317,28 @@ class MainModel{
     }
 
     /**
+     * Set active user
+     * 
+     * Setea el valor de activación de un user
+     *
+     * @param boolean $active Estado nuevo para el ususario
+     * @param string $console_id ID de la console
+     * @param String $monday_id ID del user de Monday
+     * @return int rows afected
+     */
+    public function setActiveUser($active=false,$console_id,$monday_id){
+        $active = $active?1:0;
+        $table  = 'user'.substr($monday_id,0,1);
+        $sql = "UPDATE $table set active = :active WHERE console_id = :console_id AND monday_id = :monday_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':active', $active, PDO::PARAM_INT);
+        $stmt->bindParam(':console_id', $console_id, PDO::PARAM_INT);
+        $stmt->bindParam(':monday_id', $monday_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
+
+    /**
      * Delete user
      * 
      * Borra un user
