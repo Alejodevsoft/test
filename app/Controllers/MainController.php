@@ -16,25 +16,25 @@ class MainController{
     }
 
     public function index(){
-        if ($_SERVER['REQUEST_METHOD']==='GET') {
-            if (is_logged()) {
-                $user_data  = get_user_data();
-                $console_data   = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
-                if (boolval($console_data['docusign_verify'])) {
-                    redirect('admin');
-                }else{
-                    view('form_docusign',get_user_data());
-                }
+        if (is_logged()) {
+            $user_data  = get_user_data();
+            $console_data   = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
+            if (boolval($console_data['docusign_verify'])) {
+                redirect('admin');
             }else{
-                view('form_monday');                
+                view('form_docusign',get_user_data());
             }
-        }elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            if (empty($_POST['user_id']) || empty($_POST['api_key'])) {
-                $this->loadErrorMain('Data not reported');
-            }
-            $this->verifiyMondayUser($_POST);
-            redirect();
+        }else{
+            view('form_monday');
         }
+    }
+
+    public function validateLogin(){
+        if (empty($_POST['user_id']) || empty($_POST['api_key'])) {
+            $this->loadErrorMain('Data not reported');
+        }
+        $this->verifiyMondayUser($_POST);
+        redirect();
     }
 
     private function verifiyMondayUser($request){
@@ -84,9 +84,6 @@ class MainController{
     public function saveDocusign(){
         if (!is_logged()) {
             $this->loadErrorMain('Not logged');
-        }
-        if ($_SERVER['REQUEST_METHOD']!=='POST') {
-            $this->loadErrorMain('Method not valid');
         }
         $request    = $_POST;
         if (
