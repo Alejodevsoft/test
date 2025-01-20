@@ -109,9 +109,6 @@ class AdminController{
         if (!is_logged()) {
             redirect();
         }
-        if ($_SERVER['REQUEST_METHOD']!=='POST') {
-            redirect();
-        }
         $request    = $_POST;
         if (
             empty($request['client_id']) ||
@@ -168,9 +165,6 @@ class AdminController{
         if (!is_logged()) {
             redirect();
         }
-        if ($_SERVER['REQUEST_METHOD']!=='POST') {
-            redirect();
-        }
         if (
             empty($request['board_id']) ||
             empty($request['contract_id']) ||
@@ -188,9 +182,6 @@ class AdminController{
     public function setUserActive(){
         $request    = $_POST;
         if (!is_logged()) {
-            redirect();
-        }
-        if ($_SERVER['REQUEST_METHOD']!=='POST') {
             redirect();
         }
         if (

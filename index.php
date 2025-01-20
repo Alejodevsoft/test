@@ -11,7 +11,7 @@ require_once __DIR__ . '/Common.php';
 $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-$environment = $_ENV['ENVIRONMENT'] ?? 'production';
+$environment = $_ENV['ENVIRONMENT'] ?? 'development';
 
 if ($environment === 'development') {
     // Mostrar todos los errores en entorno de desarrollo
@@ -60,22 +60,32 @@ function getRoute() {
 
     $uri = trim($relative_uri, '/');
 
-    return $uri === '' ? '/' : $uri;
+    $return['uri']      = $uri === '' ? '/' : $uri;
+    $return['method']   = $_SERVER['REQUEST_METHOD'];
+    return $return;
 }
 
 $routes = require 'routes.php';
 
 $route = getRoute();
 
-if (array_key_exists($route, $routes)) {
-    list($controllerClass, $method) = explode('::', $routes[$route]);
+// if (array_key_exists($route, $routes)) {
+if (isset($routes[$route['method']][$route['uri']])) {
+    list($controllerClass, $method) = explode('::', $routes[$route['method']][$route['uri']]['action']);
 
     $controller = new $controllerClass();
     
     if (method_exists($controller, $method)) {
-        $controller->$method();
+        try {
+            $controller->$method();
+        } catch (\Throwable $th) {
+            http_response_code(500);
+            write_error_log($th);
+        }
     } else {
-        echo "Método $method no encontrado en el controlador $controllerClass.";
+        http_response_code(405);
+        echo "Ruta {$route['uri']} no encontrada.";
+        $environment!='production' ? write_error_route_log("El método $method no se encontro en el controlador $controllerClass."):'';
     }
 } else {
     http_response_code(404);
