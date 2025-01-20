@@ -22,7 +22,7 @@ class MainModel{
     private $db;
 
     public function __construct(){
-        $database = new Database();
+        $database = Database::getInstance();
         $this->db = $database->connect();
     }
 
