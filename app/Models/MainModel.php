@@ -100,6 +100,9 @@ class MainModel{
      * @return array|null user
      */
     public function getUserByMondayId($monday_id){
+        if (!is_numeric(substr($monday_id,0,1))){
+            return null;
+        }
         $table  = 'user'.substr($monday_id,0,1);
         $sql = "SELECT * FROM $table WHERE monday_id = :monday_id";
         $stmt = $this->db->prepare($sql);
@@ -269,16 +272,17 @@ class MainModel{
     
         // Insertar users en sus respectivas tablas
         foreach ($groupedUsers as $table => $usersInTable) {
-            $sql = "INSERT INTO $table (console_id, monday_id, name, email) VALUES ";
+            $sql = "INSERT INTO $table (console_id, monday_id, name, email, password) VALUES ";
             $values = [];
             $params = [];
     
             foreach ($usersInTable as $index => $user) {
-                $values[] = "(:console_id{$index}, :monday_id{$index}, :name{$index}, :email{$index})";
+                $values[] = "(:console_id{$index}, :monday_id{$index}, :name{$index}, :email{$index}, :password{$index})";
                 $params[":console_id{$index}"] = $console_id;
                 $params[":monday_id{$index}"] = $user->id;
                 $params[":name{$index}"] = $user->name;
                 $params[":email{$index}"] = $user->email;
+                $params[":password{$index}"] = $user->password;
             }
     
             $sql .= implode(", ", $values);

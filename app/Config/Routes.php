@@ -10,6 +10,8 @@ class Routes extends Middleware{
 
     public function __construct() {
         $this->get('/', 'MainController::index');
+        $this->get('/active', 'MainController::active');
+        $this->post('/active', 'MainController::activeMonday');
         $this->post('/', 'MainController::validateLogin');
         $this->get('jwt-verify', 'MainController::jwt');
         $this->post('save-docusign', 'MainController::saveDocusign');

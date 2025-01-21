@@ -28,6 +28,9 @@
             <div class="submit-btn">
                 <button type="submit">Continue</button>
             </div>
+            <div class="active-mds">
+                <a href="<?= base_url()?>" type="submit">Go back</a>
+            </div>
         </form>
     </div>
 </body>
