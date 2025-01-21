@@ -12,21 +12,10 @@ class AdminController{
     private $console_data;
     function __construct(){
         $this->main_model   = new MainModel();
-        if (!is_logged()) {
+        $user_data  = get_user_data();
+        $this->console_data = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
+        if (!boolval($this->console_data['docusign_verify'])) {
             redirect();
-        }else{
-            $user   = $this->main_model->getUserByMondayId(get_user_data()['monday_id']);
-            if ($user == null) {
-                $this->logout();
-            }
-            if ($user['active'] == 0) {
-                $this->logout();
-            }
-            $user_data  = get_user_data();
-            $this->console_data = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
-            if (!boolval($this->console_data['docusign_verify'])) {
-                redirect();
-            }
         }
     }
     
@@ -106,10 +95,6 @@ class AdminController{
 
     public function updateDocusign(){
         $request    = $_POST;
-        if (!is_logged()) {
-            redirect();
-        }
-        $request    = $_POST;
         if (
             empty($request['client_id']) ||
             empty($request['user_id']) ||
@@ -162,9 +147,6 @@ class AdminController{
 
     public function setTemplate() {
         $request    = $_POST;
-        if (!is_logged()) {
-            redirect();
-        }
         if (
             empty($request['board_id']) ||
             empty($request['contract_id']) ||
@@ -181,9 +163,6 @@ class AdminController{
 
     public function setUserActive(){
         $request    = $_POST;
-        if (!is_logged()) {
-            redirect();
-        }
         if (
             empty($request['monday_id']) ||
             empty($request['active'])
@@ -238,9 +217,4 @@ class AdminController{
 
         echo json_encode($data);
     }
-
-    private function logout(){
-        session_destroy();
-        redirect();
-    } 
 }
