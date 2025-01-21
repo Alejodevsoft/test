@@ -10,10 +10,11 @@ use App\Models\MainModel;
 class AdminController{
     private $main_model;
     private $console_data;
+    private $user_data;
     function __construct(){
         $this->main_model   = new MainModel();
-        $user_data  = get_user_data();
-        $this->console_data = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
+        $this->user_data    = get_user_data();
+        $this->console_data = $this->main_model->getConsoleByMondayId($this->user_data['monday_id']);
         if (!boolval($this->console_data['docusign_verify'])) {
             redirect();
         }
@@ -63,7 +64,7 @@ class AdminController{
         $data['select_aside'] = 20;
         $data['page_title'] = 'Templates Config';
 
-        $console     = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
+        $console     = $this->main_model->getConsoleByMondayId($this->user_data['monday_id']);
 
         $api_key     = AesClass::decrypt($console['api_key_monday']);
         $data_boards = Monday::getBoards($api_key);
@@ -75,7 +76,7 @@ class AdminController{
 
     public function envelops(){
         $board_id    = $_GET['board_id'];
-        $console     = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
+        $console     = $this->main_model->getConsoleByMondayId($this->user_data['monday_id']);
 
         $api_key        = AesClass::decrypt($console['api_key_monday']);
         $data_envelops  = Monday::getEnvelops($api_key, $board_id);
@@ -102,7 +103,7 @@ class AdminController{
         ) {
             $this->loadErrorMain('Data not reported');
         }
-        $console    = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
+        $console    = $this->main_model->getConsoleByMondayId($this->user_data['monday_id']);
         if ($console == null) {
             $this->loadErrorMain('User not found');
         }
@@ -132,7 +133,7 @@ class AdminController{
 
     public function getDocusignTemplates(){
         $model = new MainModel();
-        $console    = $model->getConsoleByMondayId(get_user_data()['monday_id']);
+        $console    = $model->getConsoleByMondayId($this->user_data['monday_id']);
         $templates_response = Docusign::getTemplates(
             $console['server_docusign'],
             AesClass::decrypt($console['client_id_docusign']),
@@ -155,7 +156,7 @@ class AdminController{
             $this->loadErrorMain('Data not reported');
         }
 
-        $console    = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
+        $console    = $this->main_model->getConsoleByMondayId($this->user_data['monday_id']);
         $api_key    = AesClass::decrypt($console['api_key_monday']);
 
         echo Monday::setTemplate($api_key,$request['board_id'],$request['contract_id'],$request['template_id']);
@@ -169,10 +170,10 @@ class AdminController{
         ) {
             return $this->returnRest(false,'Data not reported');
         }
-        if ($request['monday_id'] === get_user_data()['monday_id']) {
+        if ($request['monday_id'] === $this->user_data['monday_id']) {
             return $this->returnRest(false,'User cannot change their own status');
         }
-        $console    = $this->main_model->getConsoleByMondayId(get_user_data()['monday_id']);
+        $console    = $this->main_model->getConsoleByMondayId($this->user_data['monday_id']);
         if ($request['active'] === 'false') {
             $this->main_model->setActiveUser(false,$console['id'],$request['monday_id']);
             return $this->returnRest(true,'User unactived',$request);
@@ -201,6 +202,41 @@ class AdminController{
                 return $this->returnRest(false,'An error has ocurred');
             }
         }
+    }
+
+    public function changePassword(){
+        $data['select_aside'] = 40;
+        $data['page_title'] = 'Change password';
+        return template_init('',$data);
+    }
+
+    public function updatePassword(){
+        $request    = $_POST;
+        if (
+            empty($request['old_password']) ||
+            empty($request['new_password']) ||
+            empty($request['new_password2'])
+        ) {
+            return $this->returnRest(false,'Data not reported');
+        }
+        $user   = $this->main_model->getUserByMondayId($this->user_data['monday_id']);
+        if (password_verify($request['old_password'],$user['password'])){
+            if ($request['new_password'] == $request['new_password2']) {
+                $options = [
+                    'cost' => 11
+                ]; 
+                if ($this->main_model->updatePassword(
+                    $user['monday_id'],
+                    $user['console_id'],
+                    password_hash($request['new_password2'],PASSWORD_BCRYPT,$options)
+                ) > 0){
+                    return $this->returnRest(true,'Pasword updated');
+                }
+                return $this->returnRest(false,'An error has ocurred');
+            }
+            return $this->returnRest(false,'Passwords do not match');
+        }
+        return $this->returnRest(false,'Password incorrect');
     }
 
     private function loadErrorMain($text_error){
