@@ -360,4 +360,25 @@ class MainModel{
         $stmt->execute();
         return $stmt->rowCount();
     }
+
+    /**
+     * Set active user
+     * 
+     * Setea el valor de activación de un user
+     *
+     * @param String $monday_id ID del user de Monday
+     * @param string $console_id ID de la console
+     * @param String $password Nueva contraseña del user
+     * @return int rows afected
+     */
+    public function updatePassword($monday_id,$console_id,$password){
+        $table  = 'user'.substr($monday_id,0,1);
+        $sql = "UPDATE $table set password = :password WHERE console_id = :console_id AND monday_id = :monday_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':password', $password, PDO::PARAM_STR);
+        $stmt->bindParam(':console_id', $console_id, PDO::PARAM_INT);
+        $stmt->bindParam(':monday_id', $monday_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
 }
