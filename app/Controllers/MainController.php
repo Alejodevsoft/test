@@ -16,25 +16,68 @@ class MainController{
     }
 
     public function index(){
-        if ($_SERVER['REQUEST_METHOD']==='GET') {
-            if (is_logged()) {
-                $user_data  = get_user_data();
-                $console_data   = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
-                if (boolval($console_data['docusign_verify'])) {
-                    redirect('admin');
-                }else{
-                    view('form_docusign',get_user_data());
-                }
+        if (is_logged()) {
+            $user_data  = get_user_data();
+            $console_data   = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
+            if (boolval($console_data['docusign_verify'])) {
+                redirect('admin');
             }else{
-                view('form_monday');                
+                redirect('active');
             }
-        }elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            if (empty($_POST['user_id']) || empty($_POST['api_key'])) {
-                $this->loadErrorMain('Data not reported');
+        }else{
+            view('login');
+        }
+    }
+
+    public function active(){
+        if (is_logged()) {
+            $user_data  = get_user_data();
+            $console_data   = $this->main_model->getConsoleByMondayId($user_data['monday_id']);
+            if (boolval($console_data['docusign_verify'])) {
+                redirect('admin');
+            }else{
+                view('form_docusign',get_user_data());
             }
-            $this->verifiyMondayUser($_POST);
+        }else{
+            view('form_monday');
+        }
+    }
+
+    public function activeMonday(){
+        if (empty($_POST['user_id']) || empty($_POST['api_key'])) {
+            $this->loadErrorMain('Data not reported');
+        }
+        $this->verifiyMondayUser($_POST);
+        redirect('active');
+    }
+
+    public function validateLogin(){
+        $request    = $_POST;
+        if (empty($request['user_id']) || empty($request['password'])) {
+            $this->loadErrorMain('Data not reported');
+        }
+        $user   = $this->main_model->getUserByMondayId($request['user_id']);
+        if ($user == null) {
+            $this->loadErrorMain('User not found');
             redirect();
         }
+        if (!boolval($user['active'])) {
+            $this->loadErrorMain('Unauthorized user');
+            redirect();
+        }
+        if (password_verify($request['password'],$user['password'])) {
+            $client = $this->main_model->getConsoleById($user['console_id']);
+            $user_data  = [
+                'client_name' => $client['client_name'],
+                'user_name' => $user['name'],
+                'monday_id' => $request['user_id']
+            ];
+            set_login(true,$user_data);
+        }else{
+            $this->loadErrorMain('Incorrect password');
+        }
+        redirect();
+
     }
 
     private function verifiyMondayUser($request){
@@ -54,7 +97,12 @@ class MainController{
             if ($resutl_insert != null) {
                 $users_monday = Monday::getUsers($request['api_key']);
                 if ($users_monday['success']) {
-                    $admin_users = array_filter($users_monday['data'], function ($user) {
+                    $options = [
+                        'cost' => 11
+                    ];
+    
+                    $admin_users = array_filter($users_monday['data'], function ($user) use($options){
+                        $user->password = password_hash($user->id,PASSWORD_BCRYPT,$options); 
                         return $user->is_admin === true;
                     });
                     $admin_users = array_values($admin_users);
@@ -84,9 +132,6 @@ class MainController{
     public function saveDocusign(){
         if (!is_logged()) {
             $this->loadErrorMain('Not logged');
-        }
-        if ($_SERVER['REQUEST_METHOD']!=='POST') {
-            $this->loadErrorMain('Method not valid');
         }
         $request    = $_POST;
         if (

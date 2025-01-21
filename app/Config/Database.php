@@ -6,6 +6,7 @@ use PDO;
 use PDOException;
 
 class Database{
+    private static $instance = null;
     private $host;
     private $db;
     private $port;
@@ -41,6 +42,13 @@ class Database{
 
     public function connect(){
         return $this->pdo;
+    }
+    
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new Database();
+        }
+        return self::$instance;
     }
 
     public function disconnect(){

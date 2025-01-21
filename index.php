@@ -1,4 +1,7 @@
 <?php
+
+use App\Config\Routes;
+
 session_set_cookie_params([
     'samesite'  => 'None',
     'secure'    => true,
@@ -11,7 +14,7 @@ require_once __DIR__ . '/Common.php';
 $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-$environment = $_ENV['ENVIRONMENT'] ?? 'production';
+$environment = $_ENV['ENVIRONMENT'] ?? 'development';
 
 if ($environment === 'development') {
     // Mostrar todos los errores en entorno de desarrollo
@@ -45,39 +48,9 @@ spl_autoload_register(function ($class) {
     if (file_exists($file)) {
         require $file;
     } else {
-        echo "No se encontró el archivo: " . $file . "<br>";
+        write_warning_log("No se encontró el archivo: " . $file . "<br>");
     }
 });
-//Obtiene la ruta del navegador, limpiadno el index y la y el dominio
-function getRoute() {
-    $base_dir = rtrim(str_replace('index.php', '', $_SERVER['SCRIPT_NAME']), '/');
-    $request_uri = $_SERVER['REQUEST_URI'];
-    $relative_uri = parse_url($request_uri, PHP_URL_PATH);
 
-    if ($base_dir !== '') {
-        $relative_uri = preg_replace('#^' . preg_quote($base_dir, '#') . '/?#', '', $relative_uri);
-    }
-
-    $uri = trim($relative_uri, '/');
-
-    return $uri === '' ? '/' : $uri;
-}
-
-$routes = require 'routes.php';
-
-$route = getRoute();
-
-if (array_key_exists($route, $routes)) {
-    list($controllerClass, $method) = explode('::', $routes[$route]);
-
-    $controller = new $controllerClass();
-    
-    if (method_exists($controller, $method)) {
-        $controller->$method();
-    } else {
-        echo "Método $method no encontrado en el controlador $controllerClass.";
-    }
-} else {
-    http_response_code(404);
-    echo "404 - Página no encontrada";
-}
+$routesClass    = new Routes();
+$routesClass->toRoute();
