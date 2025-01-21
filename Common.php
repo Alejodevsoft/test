@@ -94,4 +94,56 @@ function redirect($route = null){
 function base_url(){
     return (($_SERVER['REQUEST_SCHEME']=='https')?'https://':'http://').$_SERVER['HTTP_HOST'].str_replace('index.php','',$_SERVER['SCRIPT_NAME']);
 }
+
+function write_error_log($th){
+    $log_id     = randomString(20);
+    $timer      = getmicrotime().' |'.$log_id.'| ';
+
+    $message    = 'EXCEPTION - '.$timer.'Method: '.$_SERVER['REQUEST_METHOD'].'. Origin: '.$_SERVER['REMOTE_ADDR'].'. Message: '.$th->getMessage()."\n";
+    $message    .= $timer.'File: '.$th->getFile().'('.$th->getLine().")\n";
+
+    $traceArray = explode("\n", $th->getTraceAsString());
+    $formattedTrace = "";
+    foreach ($traceArray as $line) {
+        $formattedTrace .= $timer . $line . "\n";
+    }
+    $logContent = $message . $formattedTrace;
+    file_put_contents('logs/log-' . date('Y-m-d') . '.log', $logContent, FILE_APPEND);
+}
+
+function write_error_route_log($message){
+    $log_id     = randomString(20);
+    $timer      = getmicrotime().' |'.$log_id.'| ';
+    $logContent = 'ROUTE - '.$timer.'Method: '.$_SERVER['REQUEST_METHOD'].'. Origin: '.$_SERVER['REMOTE_ADDR'].'. Message: '.$message."\n";
+    file_put_contents('logs/log-' . date('Y-m-d') . '.log', $logContent, FILE_APPEND);
+}
+
+function write_warning_log($message){
+    $log_id     = randomString(20);
+    $timer      = getmicrotime().' |'.$log_id.'| ';
+    $logContent = 'WARNING - '.$timer.'Method: '.$_SERVER['REQUEST_METHOD'].'. Origin: '.$_SERVER['REMOTE_ADDR'].'. Message: '.$message."\n";
+    file_put_contents('logs/log-' . date('Y-m-d') . '.log', $logContent, FILE_APPEND);
+}
+
+function write_info_log($method_class,$message){
+    $log_id     = randomString(20);
+    $timer      = getmicrotime().' |'.$log_id.'| ';
+    $logContent = 'INFO - '.$timer.'Method: '.$_SERVER['REQUEST_METHOD'].'. Origin: '.$_SERVER['REMOTE_ADDR']."\n";
+    $logContent .= $timer.'From: '.$method_class.'. Message: '.$message."\n";
+    file_put_contents('logs/log-' . date('Y-m-d') . '.log', $logContent, FILE_APPEND);
+}
+
+function getmicrotime(){
+    $microtime  = microtime(true);
+    return date("Y-m-d H:i:s", $microtime) . sprintf(".%03d", ($microtime - floor($microtime)) * 10000);
+}
+
+function randomString($size){
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $randstring = '';
+    for ($i = 0; $i < $size; $i++) {
+        $randstring .= $characters[rand(0, strlen($characters)-1)];
+    }
+    return $randstring;
+}
 ?>

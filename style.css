@@ -170,6 +170,22 @@ body{
         transition: border-color 0.3s;
     }
     
+    .active-mds{
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding-top: 10px;
+        a{
+            text-align: center;          
+            transition: all ease .2s;
+            &:hover{
+                color: #007bff;
+                text-decoration: underline;
+                transition: all ease .2s;
+            }
+        }
+    }
+    
     button:hover{
         border-color: #007bff;
     }
