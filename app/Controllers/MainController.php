@@ -83,10 +83,10 @@ class MainController{
     private function verifiyMondayUser($request){
         $validate_user  = Monday::validateUser($request['user_id'],$request['api_key']);
         if (!$validate_user['success']) {
-            $this->loadErrorMain($validate_user['error']);
+            $this->loadErrorMain($validate_user['error'],'active');
         }
         if (!$validate_user['data']['is_admin']) {
-            $this->loadErrorMain('Unauthorized user');
+            $this->loadErrorMain('Unauthorized user','active');
         }
         $client = $this->main_model->getConsoleByMondayKey($request['api_key']);
         if ($client == null) {
@@ -112,14 +112,11 @@ class MainController{
                 }
             }
         }else{
-            $user   = $this->main_model->getUserByMondayId($request['user_id']);
-            if ($user == null) {
-                $this->loadErrorMain('Unauthorized user');
-            }
+            $this->loadErrorMain('The client is already active','active');
         }
         $validate_purchase  = Monday::validatePurchase($request['api_key']);
         if (!$validate_purchase['success']) {
-            $this->loadErrorMain('Not purchase');
+            $this->loadErrorMain('Not purchase','active');
         }
         $user_data  = [
             'client_name' => $validate_user['data']['company_name'],
@@ -166,9 +163,9 @@ class MainController{
         redirect('jwt-verify?id='.$user['console_id']);
     }
 
-    private function loadErrorMain($text_error){
+    private function loadErrorMain($text_error,$route = null){
         set_error($text_error);
-        redirect();
+        redirect($route);
     }
     public function jwt(){
         if (isset($_GET['id'])) {
