@@ -1,4 +1,7 @@
 <?php
+
+use App\Config\Routes;
+
 session_set_cookie_params([
     'samesite'  => 'None',
     'secure'    => true,
@@ -65,7 +68,10 @@ function getRoute() {
     return $return;
 }
 
-$routes = require 'routes.php';
+$routesClass    = new Routes();
+
+$routes = $routesClass->getRoutes();
+// $routes = require 'routes.php';
 
 $route = getRoute();
 
