@@ -29,6 +29,8 @@ class Routes extends Middleware{
             $this->post('update-docusign', 'AdminController::updateDocusign');
             $this->post('set-template', 'AdminController::setTemplate');
             $this->post('set-user-active', 'AdminController::setUserActive');
+            $this->get('change-password', 'AdminController::changePassword');
+            $this->post('update-password', 'AdminController::updatePassword');
         }, 'auth');
     }
 
