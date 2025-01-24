@@ -192,4 +192,7 @@ body{
     .error-message{
         color: #EE1122;
     }
+    .success-message{
+        color: #11EE22;
+    }
 }
