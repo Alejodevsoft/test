@@ -181,7 +181,7 @@ class AdminController{
             $api_key        = AesClass::decrypt($console['api_key_monday']);
             $monday_user    = Monday::validateUser($request['monday_id'],$api_key);
             if (!$monday_user['success']) {
-                return $this->returnRest(false,'An error has occurred on Monday');
+                return $this->returnRest(false,'An error has occurred on monday');
             }
             if (!$monday_user['data']['is_admin']) {
                 return $this->returnRest(false,'The user cannot be activated because he is not an administrator');
@@ -207,7 +207,7 @@ class AdminController{
     public function changePassword(){
         $data['select_aside'] = 40;
         $data['page_title'] = 'Change password';
-        return template_init('',$data);
+        return template_init('change-password',$data);
     }
 
     public function updatePassword(){
