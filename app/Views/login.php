@@ -8,7 +8,7 @@
 </head>
 <body class="login-body">
     <div class="container">
-        <h1>Welcome to MDS (Integration Monday & Docusign)</h1>
+        <h1>Welcome to MDS (Integration monday & Docusign)</h1>
         <div class="images">
             <img src="src/mds_white.png" alt="">
         </div>
@@ -17,8 +17,8 @@
         <?php }?>
         <form action="" method="post">
             <div class="form-group">
-                <label for="">UserId (Admin) - Monday</label>
-                <input name="user_id" type="text" placeholder="UserId (Admin) - Monday">
+                <label for="">UserId (Admin) - monday</label>
+                <input name="user_id" type="text" placeholder="UserId (Admin) - monday">
             </div>
             <div class="form-group">
                 <label for="">Password</label>

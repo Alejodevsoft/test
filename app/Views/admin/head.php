@@ -18,19 +18,16 @@
         <nav>
             <ul>
                 <li <?= ($select_aside == 10)?'class="active"':"" ?>>
-                    <a href="<?= base_url()?>admin">
-                        Dashboard
-                    </a>
+                    <a href="<?= base_url()?>admin">Dashboard</a>
                 </li>
                 <li <?= ($select_aside == 20)?'class="active"':"" ?>>
-                    <a href="<?= base_url()?>admin/templates">
-                        Templates Config
-                    </a>
+                    <a href="<?= base_url()?>admin/templates">Templates Config</a>
                 </li>
                 <li <?= ($select_aside == 30)?'class="active"':"" ?>>
-                    <a href="<?= base_url()?>admin/docusign">
-                        Docusign Config
-                    </a>
+                    <a href="<?= base_url()?>admin/docusign">Docusign Config</a>
+                </li>
+                <li <?= ($select_aside == 40)?'class="active"':"" ?>>
+                    <a href="<?= base_url()?>admin/change-password">Change Password</a>
                 </li>
             </ul>
         </nav>
