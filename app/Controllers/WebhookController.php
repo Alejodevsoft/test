@@ -19,19 +19,33 @@ class WebhookController{
     function __construct(){
         $this->main_model   = new MainModel();
     }
+
+    /**
+     * Send
+     * 
+     * Se envía el sobre a los signers configurados de monday
+     *
+     * @return null
+     */
     public function send(){
+        //Lee el dato de entrada de monday
         $datamonday = json_decode(file_get_contents('php://input'));
 
+        //Consulta el cliente de monday
         $model = new MainModel();
         $clients = $model->getConsoleByMondayId($datamonday->payload->inputFields->userId);
 
         $apiKeyMonday   = '';
         if ($clients != null && $clients['active'] == 1) {
             $apiKeyMonday   = AesClass::decrypt($clients['api_key_monday']);
-            $responseMonday = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values{id,text,type}subitems{id,name,column_values(types: email){text}}}}'));
 
+            //Recupera los signers(email, nombre y rol) a enviar los sobres, el template de DocuSign y el tipo de envío(idividual o grupal)
+            $responseMonday = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values{id,text,type}subitems{id,name,column_values{type,text}}}}'));
+
+            //Recupera la columnda para el cambio de estado
             $responseMonday3 = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: status){id}}}'));
 
+            //Recupera la info de conexión a Docusign
             $clientId = AesClass::decrypt($clients['client_id_docusign']);
             $userId = AesClass::decrypt($clients['user_id_docusign']);
             if ($clients['server_docusign'] == 0) {
@@ -45,6 +59,7 @@ class WebhookController{
 
             $jwt_scope = 'signature';
 
+            //Recupera el token de docusign para las peticiones
             $response = $apiClient->requestJWTUserToken(
                 $clientId,
                 $userId,
@@ -55,7 +70,7 @@ class WebhookController{
             $accessToken = $response[0]->getAccessToken();
             $accountId = $apiClient->getUserInfo($response[0]->getAccessToken())[0]["accounts"][0]["account_id"];
 
-            
+            //Se configura la conexón a docusign
             if ($clients['server_docusign'] == 0) {
                 $basePath = 'https://demo.docusign.net/restapi';
             } else if($clients['server_docusign'] > 0 && $clients['server_docusign'] < 5){
@@ -79,6 +94,7 @@ class WebhookController{
             $signersCustom = [];
             $signersInProgress = [];
 
+            //Setea los datos del template signtype recuperados del item de monday
             $template_id    = '';
             $sign_type      = '';
             foreach ($responseMonday->data->items[0]->column_values as $key => $column) {
@@ -90,15 +106,27 @@ class WebhookController{
                 }
             }
 
+            //Se recorren los signers a enviar el sobre
             foreach ($responseMonday->data->items[0]->subitems as $key => $signer ) {
+                $email      = '';
+                $role_name  = '';
+                foreach ($signer->column_values as $column) {
+                    if ($column->type == 'email') {
+                        $email  = $column->text;
+                    }
+                    if ($column->type == 'text') {
+                        $role_name  = $column->text;
+                    }
+                }
                 $signers[$key] = new TemplateRole([
-                    'email' => $signer->column_values[0]->text,
+                    'email' => $email,
                     'name' => $signer->name,
-                    'role_name' => 'Signer'.($sign_type=='Joint'?($key+1):'1')
+                    'role_name' => $role_name
                 ]);
-                $signersCustom[]    = 'Signer'.($sign_type=='Joint'?($key+1):'1').'__'.$signer->id;
+                $signersCustom[]    = $role_name.'__'.$signer->id;
                 $signersInProgress[]    = $signer->id;
             }
+            //Se agregan los campos custom para el envío a DocuSign
             $array_custom_fields    = [
                 new TextCustomField([
                     'name' => 'signType',
@@ -132,7 +160,9 @@ class WebhookController{
                 ])
             ];
 
+            //Configura el envelop a enviar a DocuSign, diferente en caso de ser envío grupal o onvidual
             if ($sign_type == 'Joint') {
+                //En caso se ser grupal, se configura el campo de file al item, y se envía el arreglo de los signers
                 $responseMonday2 = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: file){id}}}'));
                 $array_custom_fields[]  = new TextCustomField([
                     'name' => 'columnId',
@@ -155,6 +185,8 @@ class WebhookController{
                 ]);
                 $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
             }else{
+                //En caso se ser individual, se configura el campo de file al subitem de cada usuario, y se envía el signer individual. 
+                //Y adicional se envía un envelop por cada usuario
                 $responseMonday2 = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){subitems{column_values(types:file){id}}}}'));
                 foreach ($signers as $key => $signer) {
                     $array_custom_fields[]  = new TextCustomField([
@@ -179,6 +211,7 @@ class WebhookController{
                     $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
                 }
             }
+            //Se cambia elestado de los signers a "In progress"
             Monday::setSignersInProgress($apiKeyMonday,$signersInProgress);
         }elseif ($clients != null){
             $responseMonday3 = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: status){id}}}'));
@@ -198,20 +231,35 @@ class WebhookController{
         }
     }
 
+    /**
+     * Upload
+     * 
+     * Se suben los archivos de la firma de DocuSign en el tablero de monday
+     *
+     * @return null
+     */
     public function upload(){
+        //Se lee toda la data de entrada de docusign
         $docusign = json_decode(file_get_contents('php://input'));
 
-        $signer = null;
+        
+        //Se lee toda la data de monday de la entrada de docusign
         $datosMonday = array_column($docusign->data->envelopeSummary->customFields->textCustomFields,'value','name');
-        $clients = $this->main_model->getConsoleByMondayId($datosMonday['userIdMonday']);
+        $clients    = $this->main_model->getConsoleByMondayId($datosMonday['userIdMonday']);
+        $signer     = null;
         if ($docusign->data->envelopeSummary->recipients != null && sizeof($docusign->data->envelopeSummary->recipients->signers) > 0 ) {
+            //Se recuperan los signers de la plantilla de DocuSign, y se organizan en un array assoc
             $signers_docusign   = array_column($docusign->data->envelopeSummary->recipients->signers,'status','roleName');
-            $signers_monday = explode('||',$datosMonday['signers']);
+            //Se recuperan los signers de monday
+            $signers_monday     = explode('||',$datosMonday['signers']);
             if (sizeof($signers_monday) > 0) {
                 foreach ($signers_monday as $signer_monday) {
+                    //Se lee la data del signer de monday
                     $data_signer    = explode('__',$signer_monday);
+                    //Se guarda la data del signer de monday para usarlo en caso de firma individual
                     $signer         = $data_signer;
                     if (isset($signers_docusign[$data_signer[0]])) {
+                        //Verifica el resultado de la firma del signer y setea el subitem en monday
                         if ($signers_docusign[$data_signer[0]] == 'completed') {
                             Monday::setSignerStatus(AesClass::decrypt($clients['api_key_monday']),$data_signer[1],'Completed');
                         }elseif ($signers_docusign[$data_signer[0]] == 'declined') {
@@ -221,16 +269,20 @@ class WebhookController{
                 }
             }
         }
+        //Proceso cuando la firma se completó
         if ($docusign->data->envelopeSummary->status == "completed") {
 
+            //Se leen los documentos
             foreach ($docusign->data->envelopeSummary->envelopeDocuments as $key =>$document) {
-                $base64File = $document->PDFBytes;
-                $decodedFile = base64_decode($base64File);
+                //Se lee el base64 de los files
+                $base64File     = $document->PDFBytes;
+                $decodedFile    = base64_decode($base64File);
                 if ($key == 0) {
                     $tempFilePath = 'Document-'.$document->documentIdGuid.'.pdf';
                 }else{
                     $tempFilePath = 'Certificate-'.$document->documentIdGuid.'.pdf';
                 }
+                //Se escribe el archivo temporal que se enviará a monday
                 file_put_contents($tempFilePath, $decodedFile);
                 // Configura el formato de la marca de tiempo con milisegundos
                 $microtime = microtime(true);
@@ -251,6 +303,7 @@ class WebhookController{
                 $curl = curl_init();
 
                 if ($datosMonday['signType'] == 'Joint') {
+                    //Envía el archivo firmado de manera grupal al item de monday
                     curl_setopt_array($curl, array(
                         CURLOPT_URL => 'https://api.monday.com/v2/file',
                         CURLOPT_RETURNTRANSFER => true,
@@ -266,6 +319,7 @@ class WebhookController{
                         ),
                     ));
                 }else{
+                    //Envía el archivo firmado de manera individual al subitem de monday
                     curl_setopt_array($curl, array(
                         CURLOPT_URL => 'https://api.monday.com/v2/file',
                         CURLOPT_RETURNTRANSFER => true,
@@ -290,6 +344,7 @@ class WebhookController{
             }
             $curl = curl_init();
 
+            //Setea el Signed del item en caso de que sea firma grupal
             if ($datosMonday['signType'] == 'Joint') {
                 $query = '
                     mutation {
@@ -307,6 +362,7 @@ class WebhookController{
                 Monday::genericCurlJsonQuery(AesClass::decrypt($clients['api_key_monday']),$query);
             }
         }elseif ($docusign->data->envelopeSummary->status == "declined") {
+            //Setea el Signed del item en caso de que sea firma grupal
             if ($datosMonday['signType'] == 'Joint') {
                 $query = '
                     mutation {
@@ -326,6 +382,13 @@ class WebhookController{
         }
     }
 
+    /**
+     * SignaturesQuery
+     * 
+     * Se setean los subitems de monday cuando se cambia el estado del item a setn
+     *
+     * @return null
+     */
     public function signaturesQuery(){
         $datamonday = json_decode(file_get_contents('php://input'));
         
