@@ -28,9 +28,7 @@ class WebhookController{
         $apiKeyMonday   = '';
         if ($clients != null && $clients['active'] == 1) {
             $apiKeyMonday   = AesClass::decrypt($clients['api_key_monday']);
-            $responseMonday = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: text){text}subitems{id,name,column_values(types: email){text}}}}'));
-            
-            $responseMonday2 = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: file){id}}}'));
+            $responseMonday = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values{id,text,type}subitems{id,name,column_values(types: email){text}}}}'));
 
             $responseMonday3 = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: status){id}}}'));
 
@@ -80,57 +78,107 @@ class WebhookController{
             $signers = [];
             $signersCustom = [];
             $signersInProgress = [];
+
+            $template_id    = '';
+            $sign_type      = '';
+            foreach ($responseMonday->data->items[0]->column_values as $key => $column) {
+                if ($column->type === 'text') {
+                    $template_id    = $column->text;
+                }
+                if ($column->id === 'estado__1') {
+                    $sign_type  = $column->text;
+                }
+            }
+
             foreach ($responseMonday->data->items[0]->subitems as $key => $signer ) {
                 $signers[$key] = new TemplateRole([
                     'email' => $signer->column_values[0]->text,
                     'name' => $signer->name,
-                    'role_name' => 'Signer'.($key+1)
+                    'role_name' => 'Signer'.($sign_type=='Joint'?($key+1):'1')
                 ]);
-                $signersCustom[]    = 'Signer'.($key+1).'__'.$signer->id;
+                $signersCustom[]    = 'Signer'.($sign_type=='Joint'?($key+1):'1').'__'.$signer->id;
                 $signersInProgress[]    = $signer->id;
             }
-            $customFields = new CustomFields([
-                'text_custom_fields' => [
-                    new TextCustomField([
-                        'name' => 'pulseId',
-                        'value' => $datamonday->payload->inputFields->itemId,
-                        'show' => 'false'
-                    ]),
-                    new TextCustomField([
-                        'name' => 'boardId',
-                        'value' => $datamonday->payload->inputFields->boardId,
-                        'show' => 'false'
-                    ]),
-                    new TextCustomField([
-                        'name' => 'userIdMonday',
-                        'value' => $datamonday->payload->inputFields->userId,
-                        'show' => 'false'
-                    ]),
-                    new TextCustomField([
+            $array_custom_fields    = [
+                new TextCustomField([
+                    'name' => 'signType',
+                    'value' => $sign_type,
+                    'show' => 'false'
+                ]),
+                new TextCustomField([
+                    'name' => 'pulseId',
+                    'value' => $datamonday->payload->inputFields->itemId,
+                    'show' => 'false'
+                ]),
+                new TextCustomField([
+                    'name' => 'boardId',
+                    'value' => $datamonday->payload->inputFields->boardId,
+                    'show' => 'false'
+                ]),
+                new TextCustomField([
+                    'name' => 'userIdMonday',
+                    'value' => $datamonday->payload->inputFields->userId,
+                    'show' => 'false'
+                ]),
+                new TextCustomField([
+                    'name' => 'columnIdStatus',
+                    'value' => $responseMonday3->data->items[0]->column_values[0]->id,
+                    'show' => 'false'
+                ]),
+                new TextCustomField([
+                    'name' => 'signers',
+                    'value' => implode('||',$signersCustom),
+                    'show' => 'false'
+                ])
+            ];
+
+            if ($sign_type == 'Joint') {
+                $responseMonday2 = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: file){id}}}'));
+                $array_custom_fields[]  = new TextCustomField([
+                    'name' => 'columnId',
+                    'value' => $responseMonday2->data->items[0]->column_values[0]->id,
+                    'show' => 'false'
+                ]);
+                $array_custom_fields[]  = new TextCustomField([
+                    'name' => 'signers',
+                    'value' => implode('||',$signersCustom),
+                    'show' => 'false'
+                ]);
+                $customFields = new CustomFields([
+                    'text_custom_fields' => $array_custom_fields
+                ]);
+                $envelopeDefinition = new EnvelopeDefinition([
+                    'template_id' => $template_id,
+                    'template_roles' => $signers,
+                    'status' => 'sent',
+                    'custom_fields' => $customFields
+                ]);
+                $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
+            }else{
+                $responseMonday2 = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){subitems{column_values(types:file){id}}}}'));
+                foreach ($signers as $key => $signer) {
+                    $array_custom_fields[]  = new TextCustomField([
                         'name' => 'columnId',
-                        'value' => $responseMonday2->data->items[0]->column_values[0]->id,
+                        'value' => $responseMonday2->data->items[0]->subitems[0]->column_values[0]->id,
                         'show' => 'false'
-                    ]),
-                    new TextCustomField([
-                        'name' => 'columnIdStatus',
-                        'value' => $responseMonday3->data->items[0]->column_values[0]->id,
-                        'show' => 'false'
-                    ]),
-                    new TextCustomField([
+                    ]);
+                    $array_custom_fields[]  = new TextCustomField([
                         'name' => 'signers',
-                        'value' => implode('||',$signersCustom),
+                        'value' => $signersCustom[$key],
                         'show' => 'false'
-                    ])
-                ]
-            ]);
-        
-            $envelopeDefinition = new EnvelopeDefinition([
-                'template_id' => $responseMonday->data->items[0]->column_values[0]->text,
-                'template_roles' => $signers,
-                'status' => 'sent',
-                'custom_fields' => $customFields
-            ]);
-            $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
+                    ]);
+                    $customFields = new CustomFields([
+                        'text_custom_fields' => $array_custom_fields
+                    ]);
+                    $envelopeDefinition = new EnvelopeDefinition([
+                        'template_id' => $template_id,
+                        'template_roles' => [$signer],
+                        'status' => 'sent',
+                        'custom_fields' => $customFields
+                    ]);
+                    $envelopeApi->createEnvelope($accountId, $envelopeDefinition);
+                }
+            }
             Monday::setSignersInProgress($apiKeyMonday,$signersInProgress);
         }elseif ($clients != null){
             $responseMonday3 = json_decode(Monday::genericCurl($apiKeyMonday,'{items(ids: ['.$datamonday->payload->inputFields->itemId.']){column_values(types: status){id}}}'));
@@ -153,6 +201,7 @@ class WebhookController{
     public function upload(){
         $docusign = json_decode(file_get_contents('php://input'));
 
+        $signer = null;
         $datosMonday = array_column($docusign->data->envelopeSummary->customFields->textCustomFields,'value','name');
         $clients = $this->main_model->getConsoleByMondayId($datosMonday['userIdMonday']);
         if ($docusign->data->envelopeSummary->recipients != null && sizeof($docusign->data->envelopeSummary->recipients->signers) > 0 ) {
@@ -161,6 +210,7 @@ class WebhookController{
             if (sizeof($signers_monday) > 0) {
                 foreach ($signers_monday as $signer_monday) {
                     $data_signer    = explode('__',$signer_monday);
+                    $signer         = $data_signer;
                     if (isset($signers_docusign[$data_signer[0]])) {
                         if ($signers_docusign[$data_signer[0]] == 'completed') {
                             Monday::setSignerStatus(AesClass::decrypt($clients['api_key_monday']),$data_signer[1],'Completed');
@@ -200,20 +250,37 @@ class WebhookController{
 
                 $curl = curl_init();
 
-                curl_setopt_array($curl, array(
-                    CURLOPT_URL => 'https://api.monday.com/v2/file',
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_ENCODING => '',
-                    CURLOPT_MAXREDIRS => 10,
-                    CURLOPT_TIMEOUT => 0,
-                    CURLOPT_FOLLOWLOCATION => true,
-                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                    CURLOPT_CUSTOMREQUEST => 'POST',
-                    CURLOPT_POSTFIELDS => array('query' => 'mutation ($file: File!) {add_file_to_column (item_id:'.$datosMonday['pulseId'].', column_id: "'.$datosMonday['columnId'].'", file: $file) {id }}','variables[file]'=> new CURLFile($tempFilePath)),
-                    CURLOPT_HTTPHEADER => array(
-                        'Authorization: '.AesClass::decrypt($clients['api_key_monday'])
-                ),
-                ));
+                if ($datosMonday['signType'] == 'Joint') {
+                    curl_setopt_array($curl, array(
+                        CURLOPT_URL => 'https://api.monday.com/v2/file',
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_ENCODING => '',
+                        CURLOPT_MAXREDIRS => 10,
+                        CURLOPT_TIMEOUT => 0,
+                        CURLOPT_FOLLOWLOCATION => true,
+                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                        CURLOPT_CUSTOMREQUEST => 'POST',
+                        CURLOPT_POSTFIELDS => array('query' => 'mutation ($file: File!) {add_file_to_column (item_id:'.$datosMonday['pulseId'].', column_id: "'.$datosMonday['columnId'].'", file: $file) {id }}','variables[file]'=> new CURLFile($tempFilePath)),
+                        CURLOPT_HTTPHEADER => array(
+                            'Authorization: '.AesClass::decrypt($clients['api_key_monday'])
+                        ),
+                    ));
+                }else{
+                    curl_setopt_array($curl, array(
+                        CURLOPT_URL => 'https://api.monday.com/v2/file',
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_ENCODING => '',
+                        CURLOPT_MAXREDIRS => 10,
+                        CURLOPT_TIMEOUT => 0,
+                        CURLOPT_FOLLOWLOCATION => true,
+                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                        CURLOPT_CUSTOMREQUEST => 'POST',
+                        CURLOPT_POSTFIELDS => array('query' => 'mutation ($file: File!) {add_file_to_column (item_id:'.$signer[1].', column_id: "'.$datosMonday['columnId'].'", file: $file) {id }}','variables[file]'=> new CURLFile($tempFilePath)),
+                        CURLOPT_HTTPHEADER => array(
+                            'Authorization: '.AesClass::decrypt($clients['api_key_monday'])
+                        ),
+                    ));
+                }
 
                 $response = curl_exec($curl);
 
@@ -223,39 +290,43 @@ class WebhookController{
             }
             $curl = curl_init();
 
-            $query = '
-                mutation {
-                    change_column_value(
-                        item_id: ' . $datosMonday['pulseId'] . ',
-                        board_id: ' . $datosMonday['boardId'] . ',
-                        column_id: "' . $datosMonday['columnIdStatus'] . '",
-                        value: "{\"label\":\"Signed\"}"
-                    ) {
-                        id
+            if ($datosMonday['signType'] == 'Joint') {
+                $query = '
+                    mutation {
+                        change_column_value(
+                            item_id: ' . $datosMonday['pulseId'] . ',
+                            board_id: ' . $datosMonday['boardId'] . ',
+                            column_id: "' . $datosMonday['columnIdStatus'] . '",
+                            value: "{\"label\":\"Signed\"}"
+                        ) {
+                            id
+                        }
                     }
-                }
-            ';
-
-            Monday::genericCurlJsonQuery(AesClass::decrypt($clients['api_key_monday']),$query);
+                ';
+    
+                Monday::genericCurlJsonQuery(AesClass::decrypt($clients['api_key_monday']),$query);
+            }
         }elseif ($docusign->data->envelopeSummary->status == "declined") {
-            $query = '
-                mutation {
-                    change_column_value(
-                        item_id: ' . $datosMonday['pulseId'] . ',
-                        board_id: ' . $datosMonday['boardId'] . ',
-                        column_id: "' . $datosMonday['columnIdStatus'] . '",
-                        value: "{\"label\":\"Declined\"}"
-                    ) {
-                        id
+            if ($datosMonday['signType'] == 'Joint') {
+                $query = '
+                    mutation {
+                        change_column_value(
+                            item_id: ' . $datosMonday['pulseId'] . ',
+                            board_id: ' . $datosMonday['boardId'] . ',
+                            column_id: "' . $datosMonday['columnIdStatus'] . '",
+                            value: "{\"label\":\"Declined\"}"
+                        ) {
+                            id
+                        }
                     }
-                }
-            ';
-
-            Monday::genericCurlJsonQuery(AesClass::decrypt($clients['api_key_monday']),$query);
+                ';
+    
+                Monday::genericCurlJsonQuery(AesClass::decrypt($clients['api_key_monday']),$query);
+            }
         }
     }
 
-    public function signaturesQuery(){        
+    public function signaturesQuery(){
         $datamonday = json_decode(file_get_contents('php://input'));
         
         $client     = $this->main_model->getConsoleByMondayId($datamonday->payload->inputFields->userId);
