@@ -1,6 +1,6 @@
 <div class="login-body">
     <div class="container">
-        <h2 style="margin-top: 30px;margin-bottom: 30px;">Change your access passwrod</h2>
+        <h2 style="margin-top: 30px;margin-bottom: 30px;">Change your access password</h2>
         <span id="error_message"></span>
         <form action="" method="post" id="change_password">
             <div class="form-group">

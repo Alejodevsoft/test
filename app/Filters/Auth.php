@@ -6,7 +6,7 @@ use App\Models\MainModel;
 
 class Auth{
     public function main(){
-        $main_model   = new MainModel();
+        $main_model = new MainModel();
         if (!is_logged()) {
             redirect();
         }else{
