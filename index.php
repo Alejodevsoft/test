@@ -52,5 +52,5 @@ spl_autoload_register(function ($class) {
     }
 });
 
-$routesClass    = new Routes();
+$routesClass = new Routes();
 $routesClass->toRoute();
