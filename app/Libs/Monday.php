@@ -180,7 +180,7 @@ class Monday{
         }
         $return['success']              = true;
         $return['data']['template_id']  = $data->data->items[0]->column_values[0]->text;
-        $return['data']['subitem']      = $data->data->items[0]->subitems;
+        $return['data']['subitems']     = $data->data->items[0]->subitems;
 
         return $return;
     }
