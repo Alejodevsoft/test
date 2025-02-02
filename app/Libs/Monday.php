@@ -164,7 +164,7 @@ class Monday{
      * @return array $return
      */
     public static function getTemplateId($apiKey,$itemId){
-        $response   = self::curlMonday($apiKey,"query{items(ids:$itemId){column_values(types:text){text}}}");
+        $response   = self::curlMonday($apiKey,"query{items(ids:$itemId){column_values(types:text){text}subitems{id}}}");
         $data = json_decode($response);
         if (isset($data->errors)) {
             $return['success'] = false;
@@ -178,8 +178,9 @@ class Monday{
 
             return $return;
         }
-        $return['success'] = true;
-        $return['data'] = $data->data->items[0]->column_values[0]->text;
+        $return['success']              = true;
+        $return['data']['template_id']  = $data->data->items[0]->column_values[0]->text;
+        $return['data']['subitem']      = $data->data->items[0]->subitems;
 
         return $return;
     }
@@ -359,6 +360,41 @@ class Monday{
         $query  .= '}';
         $response = self::curlMondayJsonQuery($apiKey, $query);
 
+        $return['success']  = true;
+
+        $data = json_decode($response);
+        if (isset($data->errors)) {
+            $return['success'] = false;
+            $return['error'] = "Error Signers in progress";
+
+        }
+        return $return;
+    }
+
+    /**
+     * Set signer fields
+     * 
+     * Crea los subitems dentro del item/envelop de Monday
+     *
+     * @param string $apiKey Api Key de Monday
+     * @param array $subitems Lsita de los subitems a limpiar
+     * @return boolean
+     */
+    public static function clearSigners($apiKey,$subitems){
+        if (sizeof($subitems) < 1) {
+            $success    = true;
+        }
+        $success    = true;
+        $error      = '';
+        $query  = 'mutation{';
+        foreach ($subitems as $key => $subitem) {
+            $query  .= 'del_item'.$key.': delete_item(item_id: '.$subitem->id.') {
+                            id
+                        }';
+        }
+        $query  .= '}';
+        $response = self::curlMondayJsonQuery($apiKey, $query);
+
         $data = json_decode($response);
         if (isset($data->errors)) {
             $return['success'] = false;
@@ -366,6 +402,10 @@ class Monday{
 
             return $return;
         }
+        return [
+            'success'   => $success,
+            'error'     => $error
+        ];
     }
 
     /**
