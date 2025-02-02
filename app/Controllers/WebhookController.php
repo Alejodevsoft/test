@@ -396,15 +396,16 @@ class WebhookController{
 
         $monday_response    = Monday::getTemplateId(AesClass::decrypt($client['api_key_monday']),$datamonday->payload->inputFields->itemId);
         if ($monday_response['success']) {
-            $template_id    = $monday_response['data'];
+            $template_id    = $monday_response['data']['template_id'];
             $template_info  = Docusign::getTemplateInfo(
                 $client['server_docusign'],
                 AesClass::decrypt($client['client_id_docusign']),
                 AesClass::decrypt($client['user_id_docusign']),
                 AesClass::decrypt($client['private_key']),
-                $template_id                                
+                $template_id
             );
             if ($template_info['success']) {
+                Monday::clearSigners(AesClass::decrypt($client['api_key_monday']),$monday_response['data']['subitems']);
                 Monday::setSignerFields(AesClass::decrypt($client['api_key_monday']),$datamonday->payload->inputFields->itemId,$template_info['data']);
             }
         }
