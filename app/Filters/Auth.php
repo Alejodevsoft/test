@@ -18,7 +18,7 @@ class Auth{
     }
 
     private function logout(){
-        session_destroy();
+        logout();
         redirect();
     } 
 }
