@@ -1,5 +1,7 @@
 <?php
 
+define('PREF_SESSION_NAME', 'mds_');
+
 function template_init($view,$data=[]){
     if (empty($data['page_title'])) {
         $data['page_title'] = 'MDs';
@@ -26,58 +28,63 @@ function view($view,$data=[]){
 }
 
 function set_error($error_message=''){
-    $_SESSION['error']  = $error_message;
+    $_SESSION[PREF_SESSION_NAME.'error']  = $error_message;
 }
 
 function is_error_message(){
-    return isset($_SESSION['error']);
+    return isset($_SESSION[PREF_SESSION_NAME.'error']);
 }
 
 function error_message(){
-    $error = $_SESSION['error'];
-    unset($_SESSION['error']);
+    $error = $_SESSION[PREF_SESSION_NAME.'error'];
+    unset($_SESSION[PREF_SESSION_NAME.'error']);
     return $error;
 }
 
 function set_reverify($rev){
-    $_SESSION['reverify']  = $rev;
+    $_SESSION[PREF_SESSION_NAME.'reverify']  = $rev;
 }
 
 function is_reverify(){
-    return isset($_SESSION['reverify']);
+    return isset($_SESSION[PREF_SESSION_NAME.'reverify']);
 }
 
 function reverify(){
-    $reverify   = $_SESSION['reverify'];
-    unset($_SESSION['reverify']);
+    $reverify   = $_SESSION[PREF_SESSION_NAME.'reverify'];
+    unset($_SESSION[PREF_SESSION_NAME.'reverify']);
     return $reverify;
 }
 
 function set_docusign_new($data=''){
-    $_SESSION['docusign_new']  = $data;
+    $_SESSION[PREF_SESSION_NAME.'docusign_new']  = $data;
 }
 
 function is_docusign_new(){
-    return isset($_SESSION['docusign_new']);
+    return isset($_SESSION[PREF_SESSION_NAME.'docusign_new']);
 }
 
 function docusign_new(){
-    $docusign_new  = $_SESSION['docusign_new'];
-    unset($_SESSION['docusign_new']);
+    $docusign_new  = $_SESSION[PREF_SESSION_NAME.'docusign_new'];
+    unset($_SESSION[PREF_SESSION_NAME.'docusign_new']);
     return $docusign_new;
 }
 
 function set_login($valid = false,$user_data=[]){
-    $_SESSION['logged']     = $valid;
-    $_SESSION['user_data']  = $user_data;
+    $_SESSION[PREF_SESSION_NAME.'logged']     = $valid;
+    $_SESSION[PREF_SESSION_NAME.'user_data']  = $user_data;
 }
 
 function is_logged(){
-    return isset($_SESSION['logged'])&&$_SESSION['logged'];
+    return isset($_SESSION[PREF_SESSION_NAME.'logged'])&&$_SESSION[PREF_SESSION_NAME.'logged'];
 }
 
 function get_user_data(){
-    return $_SESSION['user_data'];
+    return $_SESSION[PREF_SESSION_NAME.'user_data'];
+}
+
+function logout(){
+    $_SESSION[PREF_SESSION_NAME.'logged'] = false;
+    unset($_SESSION[PREF_SESSION_NAME.'user_data']);
 }
 
 function redirect($route = null){
