@@ -233,7 +233,7 @@ class MainController{
     }
 
     public function logout(){
-        session_destroy();
+        logout();
         redirect();
     } 
 }
